@@ -324,6 +324,11 @@
     padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;
   }
 
+  .lang-btn{width:auto;min-width:40px;padding:0 10px;font-size:11px;border-radius:18px;}
+  .lang-opt{display:block;width:100%;padding:16px;margin-bottom:10px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:17px;font-weight:700;text-align:left;cursor:pointer;color:var(--ink);}
+  .lang-opt.active{border:2px solid var(--coral);}
+  #langModal{z-index:80;}
+
   /* Tutorial */
   .help-btn{
     width:32px;height:32px;border-radius:16px;border:1.5px solid rgba(255,255,255,0.55);
@@ -413,23 +418,24 @@
 <header>
   <div class="brand-row">
     <div>
-      <div class="brand-name">🦐 Shrimp Stall</div>
+      <div class="brand-name" data-i18n="app_name">🦐 Shrimp Stall</div>
       <div class="brand-sub" id="todayDate">-</div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;">
       <div class="today-stat">
         <div class="num" id="todayTotal">₱0</div>
-        <div class="label">today's sales</div>
+        <div class="label" data-i18n="today_sales">today's sales</div>
       </div>
+      <button id="langBtn" class="help-btn lang-btn" aria-label="Language">EN</button>
       <button id="helpBtn" class="help-btn" aria-label="Show the tutorial">?</button>
     </div>
   </div>
   <nav>
-    <button class="active" data-tab="sell">Sell</button>
-    <button data-tab="products">Products</button>
-    <button data-tab="inventory">Inventory</button>
-    <button data-tab="trends">Trends</button>
-    <button data-tab="history">History</button>
+    <button class="active" data-tab="sell" data-i18n="nav_sell">Sell</button>
+    <button data-tab="products" data-i18n="nav_products">Products</button>
+    <button data-tab="inventory" data-i18n="nav_inventory">Inventory</button>
+    <button data-tab="trends" data-i18n="nav_trends">Trends</button>
+    <button data-tab="history" data-i18n="nav_history">History</button>
   </nav>
 </header>
 
@@ -447,33 +453,33 @@
     <span class="amt" id="cartAmt">₱0</span>
   </div>
   <div style="display:flex;gap:8px;">
-    <button id="clearCartBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.4);color:#fff;">Clear</button>
-    <button id="viewCartBtn">Checkout</button>
+    <button id="clearCartBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.4);color:#fff;" data-i18n="clear">Clear</button>
+    <button id="viewCartBtn" data-i18n="checkout">Checkout</button>
   </div>
 </div>
 
 <div class="undo-toast hidden" id="undoToast">
   <span class="msg" id="undoMsg"></span>
-  <button id="undoBtn">Undo</button>
+  <button id="undoBtn" data-i18n="undo">Undo</button>
 </div>
 
 <div class="modal-overlay hidden" id="cartModal">
   <div class="modal-sheet">
     <div class="modal-title">
-      <span>Current order</span>
+      <span data-i18n="current_order">Current order</span>
       <span class="close" id="closeCart">&times;</span>
     </div>
     <div id="cartRows"></div>
-    <button id="clearCartBtnModal" style="width:100%;padding:10px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--red);font-size:13px;font-weight:700;cursor:pointer;margin-top:4px;">Cancel whole order</button>
+    <button id="clearCartBtnModal" style="width:100%;padding:10px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--red);font-size:13px;font-weight:700;cursor:pointer;margin-top:4px;" data-i18n="cancel_order">Cancel whole order</button>
     <div class="summary-block">
-      <div class="summary-line total"><span>Total</span><span id="modalTotal">₱0</span></div>
+      <div class="summary-line total"><span data-i18n="total">Total</span><span id="modalTotal">₱0</span></div>
       <div class="cash-row">
-        <label for="cashInput">Cash received (optional — leave blank if paid exact)</label>
+        <label for="cashInput" data-i18n="cash_label">Cash received (optional — leave blank if paid exact)</label>
         <input type="number" id="cashInput" inputmode="decimal" placeholder="0.00">
         <div class="change-line" id="changeLine"></div>
       </div>
     </div>
-    <button class="complete-btn" id="completeBtn" disabled>Complete sale</button>
+    <button class="complete-btn" id="completeBtn" disabled data-i18n="complete_sale">Complete sale</button>
   </div>
 </div>
 
@@ -484,13 +490,13 @@
       <span class="close" id="closeAmt">&times;</span>
     </div>
     <div class="cash-row">
-      <label for="amtInput">Customer wants to spend</label>
+      <label for="amtInput" data-i18n="customer_spend">Customer wants to spend</label>
       <input type="number" id="amtInput" inputmode="decimal" placeholder="0.00">
     </div>
     <div class="quick-amts" id="quickAmts"></div>
     <div class="amt-preview" id="amtPreview"></div>
     <div id="amtError" style="color:var(--red);font-size:12px;margin-top:8px;"></div>
-    <button class="complete-btn" id="amtAddBtn">Add to order</button>
+    <button class="complete-btn" id="amtAddBtn" data-i18n="add_to_order">Add to order</button>
   </div>
 </div>
 
@@ -501,8 +507,8 @@
       <span class="close" id="closeWeight">&times;</span>
     </div>
     <div class="unit-toggle" id="weightUnitToggle">
-      <button data-u="kg" class="active">Kilograms</button>
-      <button data-u="g">Grams</button>
+      <button data-u="kg" class="active" data-i18n="kilograms">Kilograms</button>
+      <button data-u="g" data-i18n="grams">Grams</button>
     </div>
     <div class="cash-row">
       <label for="weightInput" id="weightLabel">Weight (kg)</label>
@@ -511,7 +517,7 @@
     <div class="quick-amts" id="quickWeights"></div>
     <div class="amt-preview" id="weightPreview"></div>
     <div id="weightError" style="color:var(--red);font-size:12px;margin-top:8px;"></div>
-    <button class="complete-btn" id="weightAddBtn">Add to order</button>
+    <button class="complete-btn" id="weightAddBtn" data-i18n="add_to_order">Add to order</button>
   </div>
 </div>
 
@@ -528,8 +534,8 @@
     <div class="amt-preview" id="pricePreview"></div>
     <div id="priceModalError" style="color:var(--red);font-size:12px;margin-top:8px;"></div>
     <div class="two-btns">
-      <button class="secondary" id="priceThisSale">This sale only</button>
-      <button class="primary" id="priceSaveNew">Save as new price</button>
+      <button class="secondary" id="priceThisSale" data-i18n="this_sale_only">This sale only</button>
+      <button class="primary" id="priceSaveNew" data-i18n="save_new_price">Save as new price</button>
     </div>
   </div>
 </div>
@@ -541,16 +547,26 @@
       <span class="close" id="closeRestock">&times;</span>
     </div>
     <div class="cash-row">
-      <label for="restockQty">Quantity added</label>
+      <label for="restockQty" data-i18n="qty_added">Quantity added</label>
       <input type="number" id="restockQty" inputmode="decimal" placeholder="0">
     </div>
     <div class="cash-row">
-      <label for="restockCost">Cost paid per unit</label>
+      <label for="restockCost" data-i18n="cost_per_unit">Cost paid per unit</label>
       <input type="number" id="restockCost" inputmode="decimal" placeholder="0.00">
     </div>
     <div class="amt-preview" id="restockPreview"></div>
     <div id="restockError" style="color:var(--red);font-size:12px;margin-top:8px;"></div>
-    <button class="complete-btn" id="restockAddBtn">Add to stock</button>
+    <button class="complete-btn" id="restockAddBtn" data-i18n="add_to_stock">Add to stock</button>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="langModal">
+  <div class="modal-sheet">
+    <div class="modal-title">
+      <span>Language · Wika · Pinulongan</span>
+      <span class="close" id="closeLang">&times;</span>
+    </div>
+    <div id="langList"></div>
   </div>
 </div>
 
@@ -558,7 +574,7 @@
   <div id="tourBlock"></div>
   <div id="tourRing"></div>
   <div id="tourCard" role="dialog" aria-live="polite">
-    <div class="tc-top"><span class="tc-step" id="tcStep"></span><button class="tc-skip" id="tcSkip">Skip tour</button></div>
+    <div class="tc-top"><span class="tc-step" id="tcStep"></span><button class="tc-skip" id="tcSkip" data-i18n="tour_skip">Skip tour</button></div>
     <h3 id="tcTitle"></h3>
     <p id="tcBody"></p>
     <div class="tc-dots" id="tcDots"></div>
@@ -583,6 +599,319 @@ if(!window.storage){
 }
 const PESO =v => '₱' + Number(v || 0).toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2});
 
+let LANG = 'en';
+let langStored = false;
+let langFirstRun = false;
+const LANG_CODES = {en:'EN', fil:'FIL', hil:'HIL'};
+const LANG_NAMES = {en:'English', fil:'Filipino', hil:'Hiligaynon'};
+
+/* ---------- TRANSLATIONS ----------
+   One row per text: [key, English, Filipino, Hiligaynon].
+   To fix a translation, edit the matching row. {name} style words are filled in by the app. */
+const ROWS = [
+['app_name',"🦐 Shrimp Stall","🦐 Tindahan ng Hipon","🦐 Tindahan sang Pasayan"],
+['today_sales',"today's sales","benta ngayon","baligya subong"],
+['nav_sell',"Sell","Benta","Baligya"],
+['nav_products',"Products","Produkto","Produkto"],
+['nav_inventory',"Inventory","Stock","Stock"],
+['nav_trends',"Trends","Trend","Trend"],
+['nav_history',"History","Talaan","Rekord"],
+['help_aria',"Show the tutorial","Ipakita ang tutorial","Ipakita ang tutorial"],
+['lang_aria',"Change language","Palitan ang wika","Ilisi ang pinulongan"],
+['loading',"Loading your shop...","Nilo-load ang tindahan mo...","Ginabuksan ang imo nga tindahan..."],
+
+['items_one',"{n} item","{n} item","{n} ka item"],
+['items_many',"{n} items","{n} item","{n} ka item"],
+['clear',"Clear","I-clear","Papas"],
+['checkout',"Checkout","Magbayad","Bayad"],
+['undo',"Undo","Ibalik","Ibalik"],
+['tap_confirm',"Tap to confirm","Pindutin ulit","Pindota liwat"],
+['cancel_order',"Cancel whole order","Kanselahin ang buong order","Kanselahon ang bilog nga order"],
+['tap_again',"Tap again to cancel everything","Pindutin ulit para kanselahin lahat","Pindota liwat para kanselahon tanan"],
+['current_order',"Current order","Kasalukuyang order","Karon nga order"],
+['total',"Total","Kabuuan","Kabilugan"],
+['cash_label',"Cash received (optional — leave blank if paid exact)","Perang natanggap (opsyonal — iwanang blangko kung eksakto ang bayad)","Kwarta nga nabaton (opsyonal — pabay-i nga blangko kon husto ang bayad)"],
+['complete_sale',"Complete sale","Tapusin ang benta","Tapuson ang baligya"],
+['cart_empty',"Cart is empty.","Walang laman ang order.","Wala sing sulod ang order."],
+['price_unit',"Price {unit}","Presyo {unit}","Presyo {unit}"],
+['cancel',"Cancel","Kanselahin","Kanselahon"],
+['save_price',"Save price","I-save ang presyo","Tipigi ang presyo"],
+['edit_price',"Edit price","Baguhin ang presyo","Usbon ang presyo"],
+['discounted',"Discounted","May diskwento","May diskwento"],
+['remove',"Remove","Alisin","Kuhaon"],
+['paid_exact',"Paid exact amount — no cash entered","Eksaktong bayad — walang inilagay na pera","Husto ang bayad — wala gin-butang nga kwarta"],
+['short_by',"Short by {amt}","Kulang ng {amt}","Kulang {amt}"],
+['change_is',"Change: {amt}","Sukli: {amt}","Sukli: {amt}"],
+
+['no_products',"No products yet. Add some in the Products tab.","Wala pang produkto. Magdagdag sa tab na Produkto.","Wala pa sing produkto. Magdugang sa tab nga Produkto."],
+['out_of_stock',"Out of stock","Ubos na ang stock","Ubos na ang stock"],
+['left_n',"{n} left","{n} natira","{n} nabilin"],
+['by_amount',"By amount","Sa halaga","Sa kwarta"],
+['by_weight',"By weight","Sa timbang","Sa timbang"],
+['added_item',"Added {name} ({unit})","Naidagdag: {name} ({unit})","Nadugangan: {name} ({unit})"],
+
+['add_by_amount',"Add {name} by amount","Idagdag ang {name} ayon sa halaga","Dugangi ang {name} sa kwarta"],
+['customer_spend',"Customer wants to spend","Halagang gustong bilhin ng customer","Kantidad nga gusto ibakal sang kustomer"],
+['add_to_order',"Add to order","Idagdag sa order","Dugangi sa order"],
+['amt_hint',"Enter how much the customer wants to spend.","Ilagay kung magkano ang gustong bilhin ng customer.","Butangi kon pila ang gusto ibakal sang kustomer."],
+['amt_preview',"{amt} of {name} ≈ {qtyunit} (at {price} {perunit})","{amt} na {name} ≈ {qtyunit} (sa {price} {perunit})","{amt} nga {name} ≈ {qtyunit} (sa {price} {perunit})"],
+['valid_amount',"Enter a valid amount.","Maglagay ng tamang halaga.","Butangi sing husto nga kantidad."],
+['added_amt',"Added {amt} of {name}","Naidagdag: {amt} na {name}","Nadugangan: {amt} nga {name}"],
+
+['add_by_weight',"Add {name} by weight","Idagdag ang {name} ayon sa timbang","Dugangi ang {name} sa timbang"],
+['kilograms',"Kilograms","Kilo","Kilo"],
+['grams',"Grams","Gramo","Gramo"],
+['weight_kg',"Weight (kg)","Timbang (kg)","Timbang (kg)"],
+['weight_g',"Weight (grams)","Timbang (gramo)","Timbang (gramo)"],
+['weight_hint',"Enter the weight the customer wants.","Ilagay ang timbang na gusto ng customer.","Butangi ang timbang nga gusto sang kustomer."],
+['weight_preview',"{kgtxt} ({g} g) of {name} at {price} per kg = {total}","{kgtxt} ({g} g) ng {name} sa {price} kada kilo = {total}","{kgtxt} ({g} g) sang {name} sa {price} kada kilo = {total}"],
+['valid_weight',"Enter a valid weight.","Maglagay ng tamang timbang.","Butangi sing husto nga timbang."],
+['added_weight',"Added {qty} kg of {name}","Naidagdag: {qty} kg ng {name}","Nadugangan: {qty} kg sang {name}"],
+
+['edit_price_title',"Edit price: {name}","Baguhin ang presyo: {name}","Usbon ang presyo: {name}"],
+['new_price',"New price {unit}","Bagong presyo {unit}","Bag-o nga presyo {unit}"],
+['price_hint',"Enter the new price.","Ilagay ang bagong presyo.","Butangi ang bag-o nga presyo."],
+['regular_is',"Regular price is {price} {unit}.","Karaniwang presyo: {price} {unit}.","Kinaandan nga presyo: {price} {unit}."],
+['off_by',"That is {amt} off.","Bawas ito ng {amt}.","Ubos ini sang {amt}."],
+['above_by',"That is {amt} above regular.","Mas mataas ito ng {amt} kaysa karaniwan.","Mas mataas ini sang {amt} sangsa kinaandan."],
+['below_cost',"Below your cost of {amt}.","Mas mababa sa puhunan mong {amt}.","Mas ubos sa imo puhunan nga {amt}."],
+['this_sale_only',"This sale only","Para sa benta na ito","Para sa sini nga baligya"],
+['save_new_price',"Save as new price","I-save bilang bagong presyo","Tipigi bilang bag-o nga presyo"],
+['valid_price',"Enter a valid price.","Maglagay ng tamang presyo.","Butangi sing husto nga presyo."],
+
+['add_product_fab',"+ Add product","+ Magdagdag ng produkto","+ Magdugang sing produkto"],
+['no_products_short',"No products yet.","Wala pang produkto.","Wala pa sing produkto."],
+['prod_meta',"Sell {sell} · Cost {cost} {unit} · Stock {stock}","Benta {sell} · Puhunan {cost} {unit} · Stock {stock}","Baligya {sell} · Puhunan {cost} {unit} · Stock {stock}"],
+['edit',"Edit","Baguhin","Usbon"],
+['delete',"Delete","Burahin","Papason"],
+['edit_product',"Edit product","Baguhin ang produkto","Usbon ang produkto"],
+['new_product',"New product","Bagong produkto","Bag-o nga produkto"],
+['f_name',"Name","Pangalan","Ngalan"],
+['f_name_ph',"e.g. Large shrimp","hal. Malaking hipon","pananglitan: Dako nga pasayan"],
+['f_price',"Selling price","Presyo ng bentahan","Presyo sang baligya"],
+['f_cost',"Cost price (what you pay for it)","Puhunan (ang binabayad mo)","Puhunan (ang ginabayad mo)"],
+['f_unit',"Unit","Yunit","Yunit"],
+['f_stock_now',"Current stock on hand","Kasalukuyang stock","Karon nga stock"],
+['f_stock_start',"Starting stock","Panimulang stock","Pagsugod nga stock"],
+['f_low',"Low stock alert level","Antas ng babala sa mababang stock","Lebel sang pasidaan sa kadyot nga stock"],
+['save_changes',"Save changes","I-save ang mga pagbabago","Tipigi ang mga pagbag-o"],
+['add_product_btn',"Add product","Idagdag ang produkto","Dugangi ang produkto"],
+['err_name',"Enter a product name.","Ilagay ang pangalan ng produkto.","Butangi ang ngalan sang produkto."],
+['err_price',"Enter a valid selling price.","Maglagay ng tamang presyo ng bentahan.","Butangi sing husto nga presyo sang baligya."],
+
+['unit_kg',"per kg","kada kilo","kada kilo"],
+['unit_tray',"per tray","kada tray","kada tray"],
+['unit_piece',"per piece","kada piraso","kada piraso"],
+['unit_pack',"per pack","kada pakete","kada pakete"],
+['unit_order',"per order","kada order","kada order"],
+['w_kg',"kg","kg","kg"],
+['w_tray',"tray","tray","tray"],
+['w_piece',"piece","piraso","piraso"],
+['w_pack',"pack","pakete","pakete"],
+['w_order',"order","order","order"],
+['prod_small',"Small shrimp","Maliit na hipon","Gamay nga pasayan"],
+['prod_medium',"Medium shrimp","Katamtamang hipon","Tunga-tunga nga pasayan"],
+['prod_large',"Large shrimp","Malaking hipon","Dako nga pasayan"],
+['prod_jumbo',"Jumbo shrimp","Jumbo na hipon","Jumbo nga pasayan"],
+['prod_peeled',"Peeled shrimp","Binalatang hipon","Gin-panitan nga pasayan"],
+['prod_tray',"Shrimp (tray)","Hipon (tray)","Pasayan (tray)"],
+
+['fin_stock_value',"Stock value (capital tied up)","Halaga ng stock (puhunang nakatali)","Bili sang stock (puhunan nga nakatali)"],
+['fin_invested',"Total invested (all-time)","Kabuuang naipuhunan (lahat ng panahon)","Kabilugan nga ginpuhunan (sa tanan nga tion)"],
+['fin_revenue',"Total sales (gross revenue)","Kabuuang benta (gross)","Kabilugan nga baligya (gross)"],
+['fin_cogs',"Cost of goods sold","Puhunan ng mga naibenta","Puhunan sang mga naibaligya"],
+['fin_net',"Net income","Netong kita","Neto nga kita"],
+['fin_roi',"ROI","ROI","ROI"],
+['fin_note',"Stock value is what your unsold inventory cost you. Net income is sales minus the cost of what you sold (it doesn't include other expenses like ice, transport, or rent). ROI compares net income to everything you've spent restocking so far.","Ang halaga ng stock ay ang puhunan sa mga hindi pa naibebenta. Ang netong kita ay benta bawas ang puhunan ng mga naibenta (hindi kasama ang ibang gastos tulad ng yelo, pamasahe, o upa). Ikinukumpara ng ROI ang netong kita sa lahat ng ginastos mo sa pag-restock.","Ang bili sang stock amo ang puhunan sa mga wala pa mabaligya. Ang neto nga kita amo ang baligya nga ginkuhaan sang puhunan sang mga nabaligya (indi lakip ang iban nga gasto pareho sang yelo, pamasahe, ukon renta). Ginapaanggid sang ROI ang neto nga kita sa tanan nga ginagasto mo sa pag-restock."],
+['section_stock',"Product stock","Stock ng mga produkto","Stock sang mga produkto"],
+['low_stock',"Low stock","Mababang stock","Kadyot na lang"],
+['on_hand',"{qty} {unit} on hand · worth {worth} · cost {cost} {perunit}","{qty} {unit} ang natitira · halagang {worth} · puhunan {cost} {perunit}","{qty} {unit} ang yara · bili {worth} · puhunan {cost} {perunit}"],
+['restock',"Restock","Mag-restock","Dugang stock"],
+['restock_title',"Restock {name}","I-restock ang {name}","Dugangi ang stock sang {name}"],
+['qty_added',"Quantity added","Dami ng idinagdag","Kadamuon nga gindugang"],
+['cost_per_unit',"Cost paid per unit","Ibinayad kada yunit","Ginbayad kada yunit"],
+['restock_hint',"Enter how much you bought and what you paid per unit.","Ilagay kung gaano karami ang binili mo at magkano ang bayad kada yunit.","Butangi kon pila ang imo ginbakal kag pila ang imo ginbayad kada yunit."],
+['restock_preview',"Total cost: {total} · new stock: {stock} {unit}","Kabuuang gastos: {total} · bagong stock: {stock} {unit}","Kabilugan nga gasto: {total} · bag-o nga stock: {stock} {unit}"],
+['add_to_stock',"Add to stock","Idagdag sa stock","Dugangi sa stock"],
+['valid_qty',"Enter a valid quantity.","Maglagay ng tamang dami.","Butangi sing husto nga kadamuon."],
+['valid_cost',"Enter a valid cost.","Maglagay ng tamang puhunan.","Butangi sing husto nga puhunan."],
+
+['today_n',"today ({n} sales)","ngayon ({n} benta)","subong ({n} ka baligya)"],
+['alltime_n',"all time ({n} sales)","lahat ng panahon ({n} benta)","sa tanan nga tion ({n} ka baligya)"],
+['disc_today',"{amt} given in discounts today","{amt} ang diskwentong naibigay ngayon","{amt} ang diskwento nga ginhatag subong"],
+['no_sales_rec',"No sales recorded yet.","Wala pang naitalang benta.","Wala pa sing natala nga baligya."],
+['disc_to',"discounted to {price}","ibinaba sa {price}","ginpaubos sa {price}"],
+['disc_given',"Discount given: {amt}","Diskwentong ibinigay: {amt}","Diskwento nga ginhatag: {amt}"],
+['bk_title',"Backup and restore","Backup at pagbabalik","Backup kag pagbalik"],
+['bk_none',"You have not saved a backup yet.","Wala ka pang na-save na backup.","Wala ka pa sing natipig nga backup."],
+['bk_last',"Last backup: {date} at {time}","Huling backup: {date} nang {time}","Katapusan nga backup: {date} sang {time}"],
+['bk_desc',"Save a backup file now and then. If the app is ever reinstalled or its data is cleared, you can restore everything from it.","Mag-save ng backup file paminsan-minsan. Kung ma-reinstall ang app o mabura ang data nito, maibabalik mo ang lahat mula rito.","Magtipig sang backup file kada-kadyot. Kon ma-reinstall ang app ukon mapapas ang data sini, mabalik mo ang tanan halin diri."],
+['bk_save',"Save backup","I-save ang backup","Tipigi ang backup"],
+['bk_restore',"Restore backup","Ibalik ang backup","Ibalik ang backup"],
+['bk_saved',"Backup saved to your Downloads folder.","Na-save ang backup sa Downloads folder mo.","Natipig ang backup sa imo Downloads folder."],
+['bk_badfile',"That file is not a Shrimp POS backup.","Hindi backup ng Shrimp POS ang file na iyon.","Indi backup sang Shrimp POS ang sina nga file."],
+['bk_summary',"Backup from {when}: {s} sales, {p} products.","Backup mula {when}: {s} benta, {p} produkto.","Backup halin sang {when}: {s} ka baligya, {p} ka produkto."],
+['bk_warn',"Restoring replaces everything currently in the app.","Papalitan ng pagbabalik ang lahat ng nasa app ngayon.","Pulihan sang pagbalik ang tanan nga yara sa app subong."],
+['bk_replace',"Replace my data","Palitan ang data ko","Pulihi ang data ko"],
+['bk_restored',"Backup restored.","Naibalik na ang backup.","Nabalik na ang backup."],
+['bk_unknown',"unknown date","hindi alam na petsa","wala mahibaluan nga petsa"],
+
+['last7',"Last 7 days","Nakaraang 7 araw","Nagligad nga 7 ka adlaw"],
+['last30',"Last 30 days","Nakaraang 30 araw","Nagligad nga 30 ka adlaw"],
+['sales_orders',"sales ({n} orders)","benta ({n} order)","baligya ({n} ka order)"],
+['avg_day',"average per day","karaniwan kada araw","kasagaran kada adlaw"],
+['vs_prev',"vs the previous {n} days ({amt})","kumpara sa nakaraang {n} araw ({amt})","kumpara sa nagligad nga {n} ka adlaw ({amt})"],
+['no_prev',"No sales in the previous {n} days to compare with.","Walang benta sa nakaraang {n} araw na maikukumpara.","Wala sing baligya sa nagligad nga {n} ka adlaw nga mapaanggid."],
+['best_day_line',"Best day: {day} with {amt}.","Pinakamagandang araw: {day} na may {amt}.","Pinakamaayo nga adlaw: {day} nga may {amt}."],
+['daily_sales',"Daily sales","Benta kada araw","Baligya kada adlaw"],
+['no_period',"No sales in this period yet.","Wala pang benta sa panahong ito.","Wala pa sing baligya sa sini nga tion."],
+['bar_hint',"Dark bar is your best day. Tap a day in the calendar below to see its orders.","Ang madilim na bar ang pinakamagandang araw mo. Pindutin ang isang araw sa kalendaryo sa ibaba para makita ang mga order.","Ang madulom nga bar amo ang pinakamaayo mo nga adlaw. Pindota ang isa ka adlaw sa kalendaryo sa idalom agud makita ang mga order."],
+['this_month',"{amt} this month","{amt} ngayong buwan","{amt} sa sini nga bulan"],
+['prev_month',"Previous month","Nakaraang buwan","Nagligad nga bulan"],
+['next_month',"Next month","Susunod na buwan","Masunod nga bulan"],
+['less',"Less","Mas kaunti","Mas gamay"],
+['more_sales',"More sales","Mas maraming benta","Mas madamo nga baligya"],
+['no_sales_day',"No sales on this day.","Walang benta sa araw na ito.","Wala sing baligya sa sini nga adlaw."],
+['day_total_one',"{amt} from 1 order","{amt} mula sa 1 order","{amt} halin sa 1 ka order"],
+['day_total_many',"{amt} from {n} orders","{amt} mula sa {n} order","{amt} halin sa {n} ka order"],
+['busiest',"Busiest hours","Pinakamabentang oras","Pinakamabaligya nga oras"],
+['by_time',"Sales by time of day, {range}.","Benta ayon sa oras ng araw, {range}.","Baligya suno sa oras sang adlaw, {range}."],
+['range_7',"last 7 days","nakaraang 7 araw","nagligad nga 7 ka adlaw"],
+['range_30',"last 30 days","nakaraang 30 araw","nagligad nga 30 ka adlaw"],
+['no_sales_yet',"No sales yet in this period.","Wala pang benta sa panahong ito.","Wala pa sing baligya sa sini nga tion."],
+['best_hour',"Your best hour is {h} with {amt}.","Ang pinakamabenta mong oras ay {h} na may {amt}.","Ang pinakamabaligya mo nga oras amo ang {h} nga may {amt}."],
+['best_dow',"Best days of the week","Pinakamabentang araw sa linggo","Pinakamabaligya nga adlaw sa semana"],
+['avg_range',"Average sales per day, {range}.","Karaniwang benta kada araw, {range}.","Kasagaran nga baligya kada adlaw, {range}."],
+['strongest',"{d} is your strongest day, averaging {amt}.","Ang {d} ang pinakamalakas mong araw, karaniwang {amt}.","Ang {d} amo ang pinakamabaskog mo nga adlaw, kasagaran {amt}."],
+['prod_rank',"Best and slowest products","Pinakamabenta at pinakamabagal na produkto","Pinakamabaligya kag pinakamahinay nga produkto"],
+['ranked',"Ranked by sales, {range}.","Nakaranggo ayon sa benta, {range}.","Gin-ranggo suno sa baligya, {range}."],
+['no_prod_sales',"No product sales yet in this period.","Wala pang benta ng produkto sa panahong ito.","Wala pa sing baligya sang produkto sa sini nga tion."],
+['tag_nosales',"No sales","Walang benta","Wala baligya"],
+['tag_slow',"Slow","Mabagal","Mahinay"],
+['sold_n',"{qty} {unit} sold","{qty} {unit} ang nabenta","{qty} {unit} ang nabaligya"],
+['dow0',"Sun","Lin","Dom"],['dow1',"Mon","Lun","Lun"],['dow2',"Tue","Mar","Mar"],['dow3',"Wed","Miy","Mye"],['dow4',"Thu","Huw","Huw"],['dow5',"Fri","Biy","Bye"],['dow6',"Sat","Sab","Sab"],
+
+['tour_step',"Step {n} of {total}","Hakbang {n} ng {total}","Lakang {n} sa {total}"],
+['tour_skip',"Skip tour","Laktawan ang gabay","Laktawi ang giya"],
+['tour_back',"Back","Bumalik","Balik"],
+['tour_next',"Next","Susunod","Sunod"],
+['tour_start',"Start selling","Magsimulang magbenta","Magsugod magbaligya"],
+['t1_title',"Welcome to your shrimp stall POS","Maligayang pagdating sa POS ng tindahan mo ng hipon","Maayong pag-abot sa POS sang imo tindahan sang pasayan"],
+['t1_body',"This quick tour shows you how to sell, track your stock and see your profit. It takes about 2 minutes. You can replay it any time with the ? button at the top.","Ipapakita ng maikling gabay na ito kung paano magbenta, magbantay ng stock, at makita ang tubo mo. Mga 2 minuto lang ito. Maaari mo itong ulitin anumang oras gamit ang ? na button sa itaas.","Ipakita sang malip-ot nga giya nga ini kon paano magbaligya, magbantay sang stock, kag makita ang kita mo. Mga 2 ka minuto lang ini. Mahimo mo ini liwaton bisan san-o gamit ang ? nga button sa ibabaw."],
+['t2_title',"First, set up your products","Una, ayusin ang mga produkto mo","Una, ayuha ang imo mga produkto"],
+['t2_body',"Tap Products, then Edit on each item. Enter your selling price, what you pay for it (cost), and how much stock you have. The starting prices are samples, so replace them with your real ones.","Pindutin ang Produkto, tapos Baguhin sa bawat item. Ilagay ang presyo ng bentahan, ang binabayad mo (puhunan), at kung ilan ang stock mo. Mga halimbawa lang ang mga unang presyo, kaya palitan ng totoong presyo mo.","Pindota ang Produkto, dayon Usbon sa kada item. Butangi ang presyo sang baligya, ang ginabayad mo (puhunan), kag kon pila ang stock mo. Halimbawa lang ang mga una nga presyo, gani ilisi sang matuod mo nga presyo."],
+['t3_title',"Tap a product to sell it","Pindutin ang produkto para ibenta","Pindota ang produkto para ibaligya"],
+['t3_body',"Each tap adds 1 unit (for example 1 kg) to the order. A number badge shows how many you added, and the line below the price shows how much stock is left.","Bawat pindot ay nagdaragdag ng 1 yunit (halimbawa 1 kg) sa order. Ipinapakita ng numero kung ilan ang naidagdag mo, at ipinapakita ng linya sa ilalim ng presyo kung ilan pa ang natitirang stock.","Kada pindot nagadugang sang 1 ka yunit (pananglitan 1 kg) sa order. Ginapakita sang numero kon pila ang gindugang mo, kag ginapakita sang linya sa idalom sang presyo kon pila pa ang nabilin nga stock."],
+['t4_title',"Other ways to sell","Ibang paraan ng pagbenta","Iban nga paagi sang pagbaligya"],
+['t4_body',"By amount: the customer wants ₱100 worth. By weight: type kilos or grams. Edit price: for haggling. Choose “This sale only” for a one-time discount.","Sa halaga: gusto ng customer ng ₱100 na halaga. Sa timbang: i-type ang kilo o gramo. Baguhin ang presyo: para sa tawaran. Piliin ang “Para sa benta na ito” para sa isang beses na diskwento.","Sa kwarta: gusto sang kustomer ang ₱100 nga bili. Sa timbang: i-type ang kilo ukon gramo. Usbon ang presyo: para sa tawad. Pilia ang “Para sa sini nga baligya” para sa isa ka beses nga diskwento."],
+['t5_title',"Made a mistake?","Nagkamali ka ba?","Nasayop ka bala?"],
+['t5_body',"After you tap a product, a black bar appears for 5 seconds with an Undo button. To cancel the whole order, tap Clear twice. Nothing is saved until you complete the sale.","Pagkatapos mong pumindot ng produkto, may lalabas na itim na bar sa loob ng 5 segundo na may Ibalik na button. Para kanselahin ang buong order, pindutin ang I-clear nang dalawang beses. Walang nase-save hangga't hindi mo tinatapos ang benta.","Sa tapos mo magpindot sang produkto, may magaluwas nga itom nga bar sa sulod sang 5 ka segundo nga may Ibalik nga button. Para kanselahon ang bilog nga order, pindota ang Papas sing duha ka beses. Wala sing natipig tubtob indi mo matapos ang baligya."],
+['t6_title',"Checking out","Pagbabayad","Pagbayad"],
+['t6_body',"When the order is ready, tap Checkout at the bottom. Check the items. Type the cash received to see the change, or leave it blank if the customer paid the exact amount. Then tap Complete sale. Your stock goes down automatically.","Kapag handa na ang order, pindutin ang Magbayad sa ibaba. Tingnan ang mga item. I-type ang perang natanggap para makita ang sukli, o iwanang blangko kung eksakto ang bayad. Pagkatapos, pindutin ang Tapusin ang benta. Awtomatikong bababa ang stock mo.","Kon handa na ang order, pindota ang Bayad sa idalom. Tan-awa ang mga item. I-type ang kwarta nga nabaton agud makita ang sukli, ukon pabay-i nga blangko kon husto ang bayad. Dayon pindota ang Tapuson ang baligya. Awtomatiko nga magaubos ang stock mo."],
+['t7_title',"Watch your stock and money","Bantayan ang stock at pera","Bantayi ang stock kag kwarta"],
+['t7_body',"Inventory shows how much of each product is left. Tap Restock when you buy more shrimp and enter what you paid. The cards at the top show your capital, income and ROI.","Ipinapakita ng Stock kung ilan pa ang natitira sa bawat produkto. Pindutin ang Mag-restock kapag bumili ka ulit ng hipon at ilagay ang ibinayad mo. Ang mga card sa itaas ang nagpapakita ng puhunan, kita, at ROI mo.","Ginapakita sang Stock kon pila pa ang nabilin sa kada produkto. Pindota ang Dugang stock kon nagbakal ka liwat sang pasayan kag butangi ang ginbayad mo. Ang mga card sa ibabaw ginapakita ang puhunan, kita, kag ROI mo."],
+['t8_title',"See what sells best","Tingnan kung ano ang pinakamabenta","Tan-awa kon ano ang pinakamabaligya"],
+['t8_body',"Trends shows your best days, busiest hours and top products. In the calendar, darker days sold more. Tap a day to see its orders. It fills up as you make sales.","Ipinapakita ng Trend ang pinakamabentang araw, oras, at produkto. Sa kalendaryo, mas madilim ang araw na mas malaki ang benta. Pindutin ang isang araw para makita ang mga order. Mapupuno ito habang nagbebenta ka.","Ginapakita sang Trend ang pinakamabaligya nga adlaw, oras, kag produkto. Sa kalendaryo, mas madulom ang adlaw nga mas daku ang baligya. Pindota ang isa ka adlaw agud makita ang mga order. Mapuno ini samtang nagabaligya ka."],
+['t9_title',"Save a backup every day","Mag-save ng backup araw-araw","Magtipig sang backup kada adlaw"],
+['t9_body',"History lists every sale. At the end of each day, tap Save backup here. If your phone or the app is ever reset, you can restore all your records from that file.","Nakalista sa Talaan ang bawat benta. Sa katapusan ng araw, pindutin dito ang I-save ang backup. Kung ma-reset ang cellphone mo o ang app, maibabalik mo ang lahat ng record mula sa file na iyon.","Nakalista sa Rekord ang kada baligya. Sa katapusan sang adlaw, pindota diri ang Tipigi ang backup. Kon ma-reset ang cellphone mo ukon ang app, mabalik mo ang tanan nga rekord halin sa sina nga file."],
+['t10_title',"You are ready to start","Handa ka na","Handa ka na"],
+['t10_body',"Start with the Products tab, then make your first sale. Tap the ? button at the top any time to see this tour again.","Magsimula sa tab na Produkto, tapos gawin ang una mong benta. Pindutin ang ? na button sa itaas anumang oras para makita ulit ang gabay na ito.","Magsugod sa tab nga Produkto, dayon himoa ang una mo nga baligya. Pindota ang ? nga button sa ibabaw bisan san-o agud makita liwat ang giya nga ini."]
+];
+const I18N = {en:{}, fil:{}, hil:{}};
+ROWS.forEach(r => { I18N.en[r[0]] = r[1]; I18N.fil[r[0]] = r[2]; I18N.hil[r[0]] = r[3]; });
+
+function t(key, vars){
+  let s = (I18N[LANG] && I18N[LANG][key] !== undefined) ? I18N[LANG][key] : (I18N.en[key] !== undefined ? I18N.en[key] : key);
+  if(vars) s = s.replace(/\{(\w+)\}/g, (m, k) => (vars[k] !== undefined ? vars[k] : m));
+  return s;
+}
+const UNIT_KEYS = {'per kg':'unit_kg', 'per tray':'unit_tray', 'per piece':'unit_piece', 'per pack':'unit_pack', 'per order':'unit_order'};
+const UNIT_WORD_KEYS = {'per kg':'w_kg', 'per tray':'w_tray', 'per piece':'w_piece', 'per pack':'w_pack', 'per order':'w_order'};
+function unitLabel(u){ return UNIT_KEYS[u] ? t(UNIT_KEYS[u]) : u; }
+function unitWord(u){ return UNIT_WORD_KEYS[u] ? t(UNIT_WORD_KEYS[u]) : String(u).replace('per ', ''); }
+function locale(){ return LANG === 'en' ? 'en-PH' : 'fil-PH'; }
+function dowArr(){ return [0,1,2,3,4,5,6].map(i => t('dow' + i)); }
+
+async function loadLang(){
+  try{
+    const r = await window.storage.get('lang', false);
+    if(r && I18N[r.value]){ LANG = r.value; langStored = true; }
+  }catch(e){}
+}
+
+function applyStaticI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.documentElement.lang = LANG;
+  const lb = document.getElementById('langBtn');
+  if(lb){ lb.textContent = LANG_CODES[LANG]; lb.setAttribute('aria-label', t('lang_aria')); }
+  const hb = document.getElementById('helpBtn');
+  if(hb) hb.setAttribute('aria-label', t('help_aria'));
+}
+
+const DEFAULT_PRODUCT_DEFS = [
+  {id:'p1', k:'prod_small', unit:'per kg', price:280, costPrice:190, stock:10, lowStock:2},
+  {id:'p2', k:'prod_medium', unit:'per kg', price:340, costPrice:230, stock:10, lowStock:2},
+  {id:'p3', k:'prod_large', unit:'per kg', price:420, costPrice:290, stock:8, lowStock:2},
+  {id:'p4', k:'prod_jumbo', unit:'per kg', price:520, costPrice:360, stock:6, lowStock:1},
+  {id:'p5', k:'prod_peeled', unit:'per kg', price:460, costPrice:320, stock:5, lowStock:1},
+  {id:'p6', k:'prod_tray', unit:'per tray', price:150, costPrice:95, stock:20, lowStock:4}
+];
+function getDefaultProducts(){
+  return DEFAULT_PRODUCT_DEFS.map(d => ({id:d.id, name:t(d.k), unit:d.unit, price:d.price, costPrice:d.costPrice, stock:d.stock, lowStock:d.lowStock}));
+}
+function isUntouchedDefaults(){
+  if(products.length !== DEFAULT_PRODUCT_DEFS.length) return false;
+  return DEFAULT_PRODUCT_DEFS.every((d, i) => {
+    const p = products[i];
+    return p && p.id === d.id && p.unit === d.unit && p.price === d.price && p.costPrice === d.costPrice &&
+      p.stock === d.stock && p.lowStock === d.lowStock && ['en','fil','hil'].some(L => I18N[L][d.k] === p.name);
+  });
+}
+
+async function setLang(l){
+  if(!I18N[l]) return;
+  const untouched = isUntouchedDefaults();
+  LANG = l;
+  langStored = true;
+  try{ await window.storage.set('lang', l, false); }catch(e){}
+  if(untouched){ products = getDefaultProducts(); await saveProducts(); }
+  applyStaticI18n();
+  setTodayDate();
+  hideUndoToast();
+  resetClearButtons();
+  renderSell();
+  if(currentTab === 'products') renderProducts();
+  if(currentTab === 'inventory') renderInventory();
+  if(currentTab === 'trends') renderTrends();
+  if(currentTab === 'history') renderHistory();
+  if(tourOn) showTourStep();
+}
+
+function openLangModal(first){
+  langFirstRun = !!first;
+  document.getElementById('closeLang').style.display = first ? 'none' : '';
+  document.getElementById('langList').innerHTML = Object.keys(LANG_NAMES).map(l =>
+    `<button class="lang-opt ${(langStored && LANG === l) ? 'active' : ''}" data-l="${l}">${LANG_NAMES[l]}</button>`).join('');
+  document.querySelectorAll('#langList .lang-opt').forEach(b => b.addEventListener('click', async () => {
+    await setLang(b.dataset.l);
+    const wasFirst = langFirstRun;
+    langFirstRun = false;
+    closeLangModal();
+    if(wasFirst) maybeStartTour();
+  }));
+  document.getElementById('langModal').classList.remove('hidden');
+}
+function closeLangModal(){
+  document.getElementById('langModal').classList.add('hidden');
+}
+async function maybeStartTour(){
+  try{
+    const td = await window.storage.get('tour-done', false);
+    if(!td && sales.length === 0) startTour();
+  }catch(e){}
+}
+
+
 let products = [];
 let sales = [];
 let purchases = [];
@@ -590,21 +919,13 @@ let cart = {};
 let editingProductId = null;
 let dataReady = false;
 
-const defaultProducts = [
-  {id:'p1', name:'Small shrimp', unit:'per kg', price:280, costPrice:190, stock:10, lowStock:2},
-  {id:'p2', name:'Medium shrimp', unit:'per kg', price:340, costPrice:230, stock:10, lowStock:2},
-  {id:'p3', name:'Large shrimp', unit:'per kg', price:420, costPrice:290, stock:8, lowStock:2},
-  {id:'p4', name:'Jumbo shrimp', unit:'per kg', price:520, costPrice:360, stock:6, lowStock:1},
-  {id:'p5', name:'Peeled shrimp', unit:'per kg', price:460, costPrice:320, stock:5, lowStock:1},
-  {id:'p6', name:'Shrimp (tray)', unit:'per tray', price:150, costPrice:95, stock:20, lowStock:4},
-];
 
 async function loadData(){
   try{
     const p = await window.storage.get('products', false);
-    products = p ? JSON.parse(p.value) : defaultProducts;
+    products = p ? JSON.parse(p.value) : getDefaultProducts();
   }catch(e){
-    products = defaultProducts;
+    products = getDefaultProducts();
     try{ await window.storage.set('products', JSON.stringify(products), false); }catch(e2){}
   }
   products.forEach(p => {
@@ -661,7 +982,7 @@ function curPrice(p){
 
 function setTodayDate(){
   const d = new Date();
-  document.getElementById('todayDate').textContent = d.toLocaleDateString('en-PH', {weekday:'long', month:'short', day:'numeric'});
+  document.getElementById('todayDate').textContent = d.toLocaleDateString(locale(), {weekday:'long', month:'short', day:'numeric'});
 }
 
 function todayTotal(){
@@ -678,7 +999,7 @@ function updateTodayHeader(){
 function renderSell(){
   const el = document.getElementById('tab-sell');
   if(products.length === 0){
-    el.innerHTML = '<div class="empty-note">No products yet. Add some in the Products tab.</div>';
+    el.innerHTML = '<div class="empty-note">' + t('no_products') + '</div>';
   }else{
     el.innerHTML = '<div class="product-grid">' + products.map(p => {
       const qty = cart[p.id] ? cart[p.id].qty : 0;
@@ -688,13 +1009,13 @@ function renderSell(){
         ${qty > 0 ? `<div class="qty-badge">${fmtQty(qty)}</div>` : ''}
         <div class="pname">${escapeHtml(p.name)}</div>
         <div>
-          <div class="pmeta">${escapeHtml(p.unit)}</div>
+          <div class="pmeta">${escapeHtml(unitLabel(p.unit))}</div>
           <div class="pprice">${curPrice(p) !== p.price ? `<span class="was">${PESO(p.price)}</span>` : ''}${PESO(curPrice(p))}</div>
-          <div class="stock-note ${out ? 'out' : (low ? 'low' : '')}">${out ? 'Out of stock' : fmtQty(p.stock) + ' left'}</div>
+          <div class="stock-note ${out ? 'out' : (low ? 'low' : '')}">${out ? t('out_of_stock') : t('left_n', {n: fmtQty(p.stock)})}</div>
           <div class="chip-row">
-            <button class="amt-chip" data-act="amount" data-id="${p.id}">By amount</button>
-            ${/kg/i.test(p.unit) ? `<button class="amt-chip" data-act="weight" data-id="${p.id}">By weight</button>` : ''}
-            <button class="amt-chip" data-act="price" data-id="${p.id}">Edit price</button>
+            <button class="amt-chip" data-act="amount" data-id="${p.id}">${t('by_amount')}</button>
+            ${/kg/i.test(p.unit) ? `<button class="amt-chip" data-act="weight" data-id="${p.id}">${t('by_weight')}</button>` : ''}
+            <button class="amt-chip" data-act="price" data-id="${p.id}">${t('edit_price')}</button>
           </div>
         </div>
       </div>`;
@@ -725,7 +1046,7 @@ function addToCart(id){
   if(!cart[id]) cart[id] = {qty:0, price:curPrice(p), originalPrice:p.price, costPrice:p.costPrice||0, name:p.name, unit:p.unit};
   cart[id].qty += 1;
   renderSell();
-  showUndoToast('Added ' + p.name + ' (' + p.unit + ')', () => {
+  showUndoToast(t('added_item', {name:p.name, unit:unitLabel(p.unit)}), () => {
     if(cart[id]){
       cart[id].qty -= 1;
       if(cart[id].qty <= 0) delete cart[id];
@@ -770,10 +1091,10 @@ function clearCart(){
 
   if(!clearPending){
     clearPending = true;
-    btn1.textContent = 'Tap to confirm';
+    btn1.textContent = t('tap_confirm');
     btn1.style.background = 'var(--red)';
     btn1.style.borderColor = 'var(--red)';
-    btn2.textContent = 'Tap again to cancel everything';
+    btn2.textContent = t('tap_again');
     clearPendingTimer = setTimeout(resetClearButtons, 3500);
     return;
   }
@@ -794,12 +1115,12 @@ function resetClearButtons(){
   const btn1 = document.getElementById('clearCartBtn');
   const btn2 = document.getElementById('clearCartBtnModal');
   if(btn1){
-    btn1.textContent = 'Clear';
+    btn1.textContent = t('clear');
     btn1.style.background = 'transparent';
     btn1.style.borderColor = 'rgba(255,255,255,0.4)';
   }
   if(btn2){
-    btn2.textContent = 'Cancel whole order';
+    btn2.textContent = t('cancel_order');
   }
 }
 
@@ -808,7 +1129,7 @@ function updateCartBar(){
   const bar = document.getElementById('cartBar');
   if(count === 0){ bar.classList.add('hidden'); clearTimeout(clearPendingTimer); resetClearButtons(); return; }
   bar.classList.remove('hidden');
-  document.getElementById('cartCount').textContent = count + (count === 1 ? ' item' : ' items');
+  document.getElementById('cartCount').textContent = t(count === 1 ? 'items_one' : 'items_many', {n: fmtQty(count)});
   document.getElementById('cartAmt').textContent = PESO(total);
 }
 
@@ -833,7 +1154,7 @@ function renderCartModal(){
   const rows = document.getElementById('cartRows');
   const ids = Object.keys(cart).filter(id => cart[id].qty > 0);
   if(ids.length === 0){
-    rows.innerHTML = '<div class="empty-note">Cart is empty.</div>';
+    rows.innerHTML = '<div class="empty-note">' + t('cart_empty') + '</div>';
   }else{
     rows.innerHTML = ids.map(id => {
       const c = cart[id];
@@ -841,20 +1162,20 @@ function renderCartModal(){
       const isEditing = editingPriceId === id;
       const priceArea = isEditing
         ? `<div class="price-editor">
-            <label>Price ${escapeHtml(c.unit)}</label>
+            <label>${escapeHtml(t('price_unit', {unit: unitLabel(c.unit)}))}</label>
             <input type="number" inputmode="decimal" class="priceInput" value="${c.price}">
             <div class="price-editor-btns">
-              <button class="priceCancel">Cancel</button>
-              <button class="priceSave">Save price</button>
+              <button class="priceCancel">${t('cancel')}</button>
+              <button class="priceSave">${t('save_price')}</button>
             </div>
           </div>`
         : `<div class="cline">
-            ${discounted ? `<span class="strike">${PESO(c.originalPrice)}</span> ` : ''}${PESO(c.price)} ${escapeHtml(c.unit)} &times; ${fmtQty(c.qty)} = ${PESO(c.price * c.qty)}
-            <button class="editPrice">Edit price</button>
+            ${discounted ? `<span class="strike">${PESO(c.originalPrice)}</span> ` : ''}${PESO(c.price)} ${escapeHtml(unitLabel(c.unit))} &times; ${fmtQty(c.qty)} = ${PESO(c.price * c.qty)}
+            <button class="editPrice">${t('edit_price')}</button>
           </div>`;
       return `<div class="cart-row" data-id="${id}">
         <div class="info">
-          <div class="cname">${escapeHtml(c.name)} ${discounted ? '<span class="discount-badge">Discounted</span>' : ''}</div>
+          <div class="cname">${escapeHtml(c.name)} ${discounted ? '<span class="discount-badge">' + t('discounted') + '</span>' : ''}</div>
           ${priceArea}
         </div>
         ${isEditing ? '' : `<div class="stepper">
@@ -862,7 +1183,7 @@ function renderCartModal(){
           <span class="qv">${fmtQty(c.qty)}</span>
           <button class="inc">+</button>
         </div>
-        <button class="remove-x">Remove</button>`}
+        <button class="remove-x">${t('remove')}</button>`}
       </div>`;
     }).join('');
     rows.querySelectorAll('.cart-row').forEach(row => {
@@ -910,7 +1231,7 @@ function updateChangeLine(){
     return;
   }
   if(raw === ''){
-    line.textContent = 'Paid exact amount — no cash entered';
+    line.textContent = t('paid_exact');
     line.className = 'change-line';
     btn.disabled = false;
     return;
@@ -923,11 +1244,11 @@ function updateChangeLine(){
   }
   const change = cashVal - total;
   if(change < 0){
-    line.textContent = 'Short by ' + PESO(Math.abs(change));
+    line.textContent = t('short_by', {amt: PESO(Math.abs(change))});
     line.className = 'change-line negative';
     btn.disabled = true;
   }else{
-    line.textContent = 'Change: ' + PESO(change);
+    line.textContent = t('change_is', {amt: PESO(change)});
     line.className = 'change-line positive';
     btn.disabled = false;
   }
@@ -972,7 +1293,7 @@ function openAmountModal(id){
   const p = products.find(x => x.id === id);
   if(!p) return;
   amtModalProductId = id;
-  document.getElementById('amtModalTitle').textContent = 'Add ' + p.name + ' by amount';
+  document.getElementById('amtModalTitle').textContent = t('add_by_amount', {name: p.name});
   document.getElementById('amtInput').value = '';
   document.getElementById('amtError').textContent = '';
   const quick = document.getElementById('quickAmts');
@@ -999,12 +1320,11 @@ function updateAmountPreview(){
   const val = parseFloat(document.getElementById('amtInput').value);
   quick.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.v === document.getElementById('amtInput').value));
   if(!p || isNaN(val) || val <= 0){
-    preview.innerHTML = 'Enter how much the customer wants to spend.';
+    preview.innerHTML = t('amt_hint');
     return;
   }
   const qty = val / curPrice(p);
-  const unitWord = p.unit.replace('per ', '');
-  preview.innerHTML = `${PESO(val)} of ${escapeHtml(p.name)} ≈ <span class="qv2">${fmtQty(qty)} ${escapeHtml(unitWord)}</span> (at ${PESO(curPrice(p))} ${escapeHtml(p.unit)})`;
+  preview.innerHTML = t('amt_preview', {amt: PESO(val), name: escapeHtml(p.name), qtyunit: '<span class="qv2">' + fmtQty(qty) + ' ' + escapeHtml(unitWord(p.unit)) + '</span>', price: PESO(curPrice(p)), perunit: escapeHtml(unitLabel(p.unit))});
 }
 
 function addByAmount(){
@@ -1013,7 +1333,7 @@ function addByAmount(){
   const val = parseFloat(document.getElementById('amtInput').value);
   if(!p) return;
   if(isNaN(val) || val <= 0){
-    err.textContent = 'Enter a valid amount.';
+    err.textContent = t('valid_amount');
     return;
   }
   const qty = val / curPrice(p);
@@ -1022,7 +1342,7 @@ function addByAmount(){
   closeAmountModal();
   renderSell();
   const pid = p.id;
-  showUndoToast('Added ' + PESO(val) + ' of ' + p.name, () => {
+  showUndoToast(t('added_amt', {amt: PESO(val), name: p.name}), () => {
     if(cart[pid]){
       cart[pid].qty -= qty;
       if(cart[pid].qty <= 0.0001) delete cart[pid];
@@ -1040,7 +1360,7 @@ function openWeightModal(id){
   if(!p) return;
   weightProductId = id;
   weightUnit = 'kg';
-  document.getElementById('weightModalTitle').textContent = 'Add ' + p.name + ' by weight';
+  document.getElementById('weightModalTitle').textContent = t('add_by_weight', {name: p.name});
   document.getElementById('weightInput').value = '';
   document.getElementById('weightError').textContent = '';
   renderWeightUnit();
@@ -1054,7 +1374,7 @@ function closeWeightModal(){
 
 function renderWeightUnit(){
   document.querySelectorAll('#weightUnitToggle button').forEach(b => b.classList.toggle('active', b.dataset.u === weightUnit));
-  document.getElementById('weightLabel').textContent = weightUnit === 'kg' ? 'Weight (kg)' : 'Weight (grams)';
+  document.getElementById('weightLabel').textContent = t(weightUnit === 'kg' ? 'weight_kg' : 'weight_g');
   document.getElementById('weightInput').placeholder = weightUnit === 'kg' ? '0.0' : '0';
   const quick = document.getElementById('quickWeights');
   const opts = weightUnit === 'kg'
@@ -1084,12 +1404,12 @@ function updateWeightPreview(){
   quick.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.v === raw));
   const kg = weightInKg();
   if(!p || kg === null){
-    preview.innerHTML = 'Enter the weight the customer wants.';
+    preview.innerHTML = t('weight_hint');
     return;
   }
   const grams = Math.round(kg * 1000);
   const price = curPrice(p);
-  preview.innerHTML = `<span class="qv2">${fmtQty(kg)} kg</span> (${grams} g) of ${escapeHtml(p.name)} at ${PESO(price)} per kg = <span class="qv2">${PESO(kg * price)}</span>`;
+  preview.innerHTML = t('weight_preview', {kgtxt: '<span class="qv2">' + fmtQty(kg) + ' kg</span>', g: grams, name: escapeHtml(p.name), price: PESO(price), total: '<span class="qv2">' + PESO(kg * price) + '</span>'});
 }
 
 function addByWeight(){
@@ -1097,14 +1417,14 @@ function addByWeight(){
   const err = document.getElementById('weightError');
   if(!p) return;
   const kg = weightInKg();
-  if(kg === null){ err.textContent = 'Enter a valid weight.'; return; }
+  if(kg === null){ err.textContent = t('valid_weight'); return; }
   const qty = Math.round(kg * 1000) / 1000;
   if(!cart[p.id]) cart[p.id] = {qty:0, price:curPrice(p), originalPrice:p.price, costPrice:p.costPrice||0, name:p.name, unit:p.unit};
   cart[p.id].qty += qty;
   closeWeightModal();
   renderSell();
   const pid = p.id;
-  showUndoToast('Added ' + fmtQty(qty) + ' kg of ' + p.name, () => {
+  showUndoToast(t('added_weight', {qty: fmtQty(qty), name: p.name}), () => {
     if(cart[pid]){
       cart[pid].qty -= qty;
       if(cart[pid].qty <= 0.0001) delete cart[pid];
@@ -1120,8 +1440,8 @@ function openPriceModal(id){
   const p = products.find(x => x.id === id);
   if(!p) return;
   priceProductId = id;
-  document.getElementById('priceModalTitle').textContent = 'Edit price: ' + p.name;
-  document.getElementById('priceModalLabel').textContent = 'New price ' + p.unit;
+  document.getElementById('priceModalTitle').textContent = t('edit_price_title', {name: p.name});
+  document.getElementById('priceModalLabel').textContent = t('new_price', {unit: unitLabel(p.unit)});
   document.getElementById('priceModalInput').value = curPrice(p);
   document.getElementById('priceModalError').textContent = '';
   updatePricePreview();
@@ -1138,14 +1458,14 @@ function updatePricePreview(){
   const preview = document.getElementById('pricePreview');
   const v = parseFloat(document.getElementById('priceModalInput').value);
   if(!p || isNaN(v) || v < 0){
-    preview.innerHTML = 'Enter the new price.';
+    preview.innerHTML = t('price_hint');
     return;
   }
   const diff = p.price - v;
-  let note = `Regular price is ${PESO(p.price)} ${escapeHtml(p.unit)}.`;
-  if(diff > 0.001) note += ` That is <span class="qv2">${PESO(diff)}</span> off.`;
-  else if(diff < -0.001) note += ` That is <span class="qv2">${PESO(-diff)}</span> above regular.`;
-  if(p.costPrice && v < p.costPrice) note += ` <span style="color:var(--red);font-weight:700;">Below your cost of ${PESO(p.costPrice)}.</span>`;
+  let note = t('regular_is', {price: PESO(p.price), unit: escapeHtml(unitLabel(p.unit))});
+  if(diff > 0.001) note += ' ' + t('off_by', {amt: '<span class="qv2">' + PESO(diff) + '</span>'});
+  else if(diff < -0.001) note += ' ' + t('above_by', {amt: '<span class="qv2">' + PESO(-diff) + '</span>'});
+  if(p.costPrice && v < p.costPrice) note += ' <span style="color:var(--red);font-weight:700;">' + t('below_cost', {amt: PESO(p.costPrice)}) + '</span>';
   preview.innerHTML = note;
 }
 
@@ -1154,7 +1474,7 @@ function applyPrice(permanent){
   const err = document.getElementById('priceModalError');
   const v = parseFloat(document.getElementById('priceModalInput').value);
   if(!p) return;
-  if(isNaN(v) || v < 0){ err.textContent = 'Enter a valid price.'; return; }
+  if(isNaN(v) || v < 0){ err.textContent = t('valid_price'); return; }
   if(permanent){
     p.price = v;
     delete sessionPrice[p.id];
@@ -1171,19 +1491,19 @@ function applyPrice(permanent){
 /* ---------- PRODUCTS TAB ---------- */
 function renderProducts(){
   const el = document.getElementById('tab-products');
-  let html = '<button class="fab-add" id="addProductBtn">+ Add product</button>';
+  let html = '<button class="fab-add" id="addProductBtn">' + t('add_product_fab') + '</button>';
   html += '<div id="productFormSlot"></div>';
   if(products.length === 0){
-    html += '<div class="empty-note">No products yet.</div>';
+    html += '<div class="empty-note">' + t('no_products_short') + '</div>';
   }else{
     html += products.map(p => `
       <div class="prod-manage-row" data-id="${p.id}">
         <div class="info">
           <div class="pname2">${escapeHtml(p.name)}</div>
-          <div class="pmeta2">Sell ${PESO(p.price)} · Cost ${PESO(p.costPrice)} ${escapeHtml(p.unit)} · Stock ${fmtQty(p.stock)}</div>
+          <div class="pmeta2">${escapeHtml(t('prod_meta', {sell: PESO(p.price), cost: PESO(p.costPrice), unit: unitLabel(p.unit), stock: fmtQty(p.stock)}))}</div>
         </div>
-        <button class="icon-btn edit">Edit</button>
-        <button class="icon-btn del">Delete</button>
+        <button class="icon-btn edit">${t('edit')}</button>
+        <button class="icon-btn del">${t('delete')}</button>
       </div>`).join('');
   }
   el.innerHTML = html;
@@ -1213,26 +1533,26 @@ function showProductForm(){
   const editing = editingProductId ? products.find(p => p.id === editingProductId) : null;
   slot.innerHTML = `
     <div class="add-form">
-      <h3>${editing ? 'Edit product' : 'New product'}</h3>
-      <label>Name</label>
-      <input type="text" id="fName" placeholder="e.g. Large shrimp" value="${editing ? escapeHtml(editing.name) : ''}">
-      <label>Selling price</label>
+      <h3>${editing ? t('edit_product') : t('new_product')}</h3>
+      <label>${t('f_name')}</label>
+      <input type="text" id="fName" placeholder="${escapeHtml(t('f_name_ph'))}" value="${editing ? escapeHtml(editing.name) : ''}">
+      <label>${t('f_price')}</label>
       <input type="number" id="fPrice" inputmode="decimal" placeholder="0.00" value="${editing ? editing.price : ''}">
-      <label>Cost price (what you pay for it)</label>
+      <label>${t('f_cost')}</label>
       <input type="number" id="fCost" inputmode="decimal" placeholder="0.00" value="${editing ? editing.costPrice : ''}">
-      <label>Unit</label>
+      <label>${t('f_unit')}</label>
       <select id="fUnit">
         ${['per kg','per tray','per piece','per pack','per order'].map(u =>
-          `<option value="${u}" ${editing && editing.unit === u ? 'selected' : ''}>${u}</option>`).join('')}
+          `<option value="${u}" ${editing && editing.unit === u ? 'selected' : ''}>${unitLabel(u)}</option>`).join('')}
       </select>
-      <label>${editing ? 'Current stock on hand' : 'Starting stock'}</label>
+      <label>${editing ? t('f_stock_now') : t('f_stock_start')}</label>
       <input type="number" id="fStock" inputmode="decimal" placeholder="0" value="${editing ? editing.stock : ''}">
-      <label>Low stock alert level</label>
+      <label>${t('f_low')}</label>
       <input type="number" id="fLowStock" inputmode="decimal" placeholder="2" value="${editing ? editing.lowStock : '2'}">
       <div id="formError" style="color:var(--red);font-size:12px;margin-top:8px;"></div>
       <div class="form-btn-row">
-        <button class="cancel" id="cancelForm">Cancel</button>
-        <button class="save" id="saveForm">${editing ? 'Save changes' : 'Add product'}</button>
+        <button class="cancel" id="cancelForm">${t('cancel')}</button>
+        <button class="save" id="saveForm">${editing ? t('save_changes') : t('add_product_btn')}</button>
       </div>
     </div>`;
   document.getElementById('cancelForm').addEventListener('click', () => { editingProductId = null; slot.innerHTML = ''; });
@@ -1244,8 +1564,8 @@ function showProductForm(){
     const stock = parseFloat(document.getElementById('fStock').value);
     const lowStock = parseFloat(document.getElementById('fLowStock').value);
     const err = document.getElementById('formError');
-    if(!name){ err.textContent = 'Enter a product name.'; return; }
-    if(isNaN(price) || price <= 0){ err.textContent = 'Enter a valid selling price.'; return; }
+    if(!name){ err.textContent = t('err_name'); return; }
+    if(isNaN(price) || price <= 0){ err.textContent = t('err_price'); return; }
     const finalCost = isNaN(cost) || cost < 0 ? 0 : cost;
     const finalStock = isNaN(stock) || stock < 0 ? 0 : stock;
     const finalLowStock = isNaN(lowStock) || lowStock < 0 ? 2 : lowStock;
@@ -1278,28 +1598,28 @@ function renderInventory(){
   const el = document.getElementById('tab-inventory');
   const f = computeFinancials();
   let html = `<div class="fin-grid">
-    <div class="fin-card"><div class="fl">Stock value (capital tied up)</div><div class="fv">${PESO(f.capitalInStock)}</div></div>
-    <div class="fin-card"><div class="fl">Total invested (all-time)</div><div class="fv">${PESO(f.totalInvested)}</div></div>
-    <div class="fin-card accent"><div class="fl">Total sales (gross revenue)</div><div class="fv">${PESO(f.grossRevenue)}</div></div>
-    <div class="fin-card"><div class="fl">Cost of goods sold</div><div class="fv">${PESO(f.cogs)}</div></div>
-    <div class="fin-card ${f.grossProfit >= 0 ? 'positive' : 'negative'}"><div class="fl">Net income</div><div class="fv">${PESO(f.netIncome)}</div></div>
-    <div class="fin-card ${f.roi === null ? '' : (f.roi >= 0 ? 'positive' : 'negative')}"><div class="fl">ROI</div><div class="fv">${f.roi === null ? '—' : f.roi.toFixed(1) + '%'}</div></div>
+    <div class="fin-card"><div class="fl">${t('fin_stock_value')}</div><div class="fv">${PESO(f.capitalInStock)}</div></div>
+    <div class="fin-card"><div class="fl">${t('fin_invested')}</div><div class="fv">${PESO(f.totalInvested)}</div></div>
+    <div class="fin-card accent"><div class="fl">${t('fin_revenue')}</div><div class="fv">${PESO(f.grossRevenue)}</div></div>
+    <div class="fin-card"><div class="fl">${t('fin_cogs')}</div><div class="fv">${PESO(f.cogs)}</div></div>
+    <div class="fin-card ${f.grossProfit >= 0 ? 'positive' : 'negative'}"><div class="fl">${t('fin_net')}</div><div class="fv">${PESO(f.netIncome)}</div></div>
+    <div class="fin-card ${f.roi === null ? '' : (f.roi >= 0 ? 'positive' : 'negative')}"><div class="fl">${t('fin_roi')}</div><div class="fv">${f.roi === null ? '—' : f.roi.toFixed(1) + '%'}</div></div>
   </div>
-  <div class="fin-note">Stock value is what your unsold inventory cost you. Net income is sales minus the cost of what you sold (it doesn't include other expenses like ice, transport, or rent). ROI compares net income to everything you've spent restocking so far.</div>
-  <div class="section-label">Product stock</div>`;
+  <div class="fin-note">${t('fin_note')}</div>
+  <div class="section-label">${t('section_stock')}</div>`;
 
   if(products.length === 0){
-    html += '<div class="empty-note">No products yet. Add some in the Products tab.</div>';
+    html += '<div class="empty-note">' + t('no_products') + '</div>';
   }else{
     html += products.map(p => {
       const low = p.stock <= p.lowStock && p.stock > 0;
       const out = p.stock <= 0;
       return `<div class="stock-row ${low || out ? 'low-flag' : ''}" data-id="${p.id}">
         <div class="info">
-          <div class="sname">${escapeHtml(p.name)} ${out ? '<span class="out-badge">Out of stock</span>' : (low ? '<span class="low-badge">Low stock</span>' : '')}</div>
-          <div class="smeta">${fmtQty(p.stock)} ${escapeHtml(p.unit.replace('per ',''))} on hand · worth ${PESO(p.stock * p.costPrice)} · cost ${PESO(p.costPrice)} ${escapeHtml(p.unit)}</div>
+          <div class="sname">${escapeHtml(p.name)} ${out ? '<span class="out-badge">' + t('out_of_stock') + '</span>' : (low ? '<span class="low-badge">' + t('low_stock') + '</span>' : '')}</div>
+          <div class="smeta">${escapeHtml(t('on_hand', {qty: fmtQty(p.stock), unit: unitWord(p.unit), worth: PESO(p.stock * p.costPrice), cost: PESO(p.costPrice), perunit: unitLabel(p.unit)}))}</div>
         </div>
-        <button class="restock-btn" data-id="${p.id}">Restock</button>
+        <button class="restock-btn" data-id="${p.id}">${t('restock')}</button>
       </div>`;
     }).join('');
   }
@@ -1316,7 +1636,7 @@ function openRestockModal(id){
   const p = products.find(x => x.id === id);
   if(!p) return;
   restockProductId = id;
-  document.getElementById('restockModalTitle').textContent = 'Restock ' + p.name;
+  document.getElementById('restockModalTitle').textContent = t('restock_title', {name: p.name});
   document.getElementById('restockQty').value = '';
   document.getElementById('restockCost').value = p.costPrice || '';
   document.getElementById('restockError').textContent = '';
@@ -1335,11 +1655,11 @@ function updateRestockPreview(){
   const qty = parseFloat(document.getElementById('restockQty').value);
   const cost = parseFloat(document.getElementById('restockCost').value);
   if(!p || isNaN(qty) || qty <= 0 || isNaN(cost) || cost < 0){
-    preview.innerHTML = 'Enter how much you bought and what you paid per unit.';
+    preview.innerHTML = t('restock_hint');
     return;
   }
   const newStock = p.stock + qty;
-  preview.innerHTML = `Total cost: <span class="qv2">${PESO(qty * cost)}</span> · new stock: <span class="qv2">${fmtQty(newStock)}</span> ${escapeHtml(p.unit.replace('per ',''))}`;
+  preview.innerHTML = t('restock_preview', {total: '<span class="qv2">' + PESO(qty * cost) + '</span>', stock: '<span class="qv2">' + fmtQty(newStock) + '</span>', unit: escapeHtml(unitWord(p.unit))});
 }
 
 async function submitRestock(){
@@ -1348,8 +1668,8 @@ async function submitRestock(){
   const qty = parseFloat(document.getElementById('restockQty').value);
   const cost = parseFloat(document.getElementById('restockCost').value);
   if(!p) return;
-  if(isNaN(qty) || qty <= 0){ err.textContent = 'Enter a valid quantity.'; return; }
-  if(isNaN(cost) || cost < 0){ err.textContent = 'Enter a valid cost.'; return; }
+  if(isNaN(qty) || qty <= 0){ err.textContent = t('valid_qty'); return; }
+  if(isNaN(cost) || cost < 0){ err.textContent = t('valid_cost'); return; }
   p.stock = Math.round((p.stock + qty) * 1000) / 1000;
   p.costPrice = cost;
   purchases.unshift({
@@ -1378,22 +1698,22 @@ function renderHistory(){
   const todayDiscount = todaySales.reduce((a,s) => a + (s.discount || 0), 0);
 
   let html = `<div class="hist-summary">
-    <div class="hist-stat"><div class="n">${PESO(todaySum)}</div><div class="l">today (${todaySales.length} sales)</div></div>
-    <div class="hist-stat"><div class="n">${PESO(allSum)}</div><div class="l">all time (${sales.length} sales)</div></div>
+    <div class="hist-stat"><div class="n">${PESO(todaySum)}</div><div class="l">${t('today_n', {n: todaySales.length})}</div></div>
+    <div class="hist-stat"><div class="n">${PESO(allSum)}</div><div class="l">${t('alltime_n', {n: sales.length})}</div></div>
   </div>`;
   if(todayDiscount > 0){
-    html += `<div style="font-size:12px;color:var(--ink-soft);margin:-6px 0 14px 2px;">${PESO(todayDiscount)} given in discounts today</div>`;
+    html += `<div style="font-size:12px;color:var(--ink-soft);margin:-6px 0 14px 2px;">${t('disc_today', {amt: PESO(todayDiscount)})}</div>`;
   }
 
   if(sales.length === 0){
-    html += '<div class="empty-note">No sales recorded yet.</div>';
+    html += '<div class="empty-note">' + t('no_sales_rec') + '</div>';
   }else{
     html += sales.map(s => {
       const t = new Date(s.timestamp);
-      const timeStr = t.toLocaleDateString('en-PH', {month:'short', day:'numeric'}) + ' · ' + t.toLocaleTimeString('en-PH', {hour:'numeric', minute:'2-digit'});
+      const timeStr = t.toLocaleDateString(locale(), {month:'short', day:'numeric'}) + ' · ' + t.toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
       const itemsStr = s.items.map(i => {
         const wasDiscounted = i.originalPrice && Math.abs(i.originalPrice - i.price) > 0.001;
-        return `${i.name} x${fmtQty(i.qty)}` + (wasDiscounted ? ` (discounted to ${PESO(i.price)})` : '');
+        return `${i.name} x${fmtQty(i.qty)}` + (wasDiscounted ? ' (' + t('disc_to', {price: PESO(i.price)}) + ')' : '');
       }).join(', ');
       return `<div class="sale-card">
         <div class="sale-top">
@@ -1401,7 +1721,7 @@ function renderHistory(){
           <span class="sale-total">${PESO(s.total)}</span>
         </div>
         <div class="sale-items">${escapeHtml(itemsStr)}</div>
-        ${s.discount ? `<div style="font-size:11px;color:var(--coral-dark);margin-top:4px;font-weight:700;">Discount given: ${PESO(s.discount)}</div>` : ''}
+        ${s.discount ? `<div style="font-size:11px;color:var(--coral-dark);margin-top:4px;font-weight:700;">${t('disc_given', {amt: PESO(s.discount)})}</div>` : ''}
       </div>`;
     }).join('');
   }
@@ -1415,31 +1735,31 @@ let lastBackup = null;
 let pendingRestore = null;
 
 function backupCardHtml(){
-  let status = 'You have not saved a backup yet.';
+  let status = t('bk_none');
   let stale = true;
   if(lastBackup){
     const d = new Date(lastBackup);
     const days = Math.floor((Date.now() - d.getTime()) / 86400000);
-    status = 'Last backup: ' + d.toLocaleDateString('en-PH',{month:'short',day:'numeric'}) + ' at ' + d.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'});
+    status = t('bk_last', {date: d.toLocaleDateString(locale(),{month:'short',day:'numeric'}), time: d.toLocaleTimeString(locale(),{hour:'numeric',minute:'2-digit'})});
     stale = days >= 7;
   }
   let restoreArea = '';
   if(pendingRestore){
     const b = pendingRestore;
-    const when = b.exportedAt ? new Date(b.exportedAt).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}) : 'unknown date';
-    restoreArea = `<div class="highlight-line" style="margin-top:10px;">Backup from ${when}: ${b.sales.length} sales, ${b.products.length} products.<br>Restoring replaces everything currently in the app.</div>
+    const when = b.exportedAt ? new Date(b.exportedAt).toLocaleDateString(locale(),{month:'short',day:'numeric',year:'numeric'}) : t('bk_unknown');
+    restoreArea = `<div class="highlight-line" style="margin-top:10px;">${t('bk_summary', {when, s: b.sales.length, p: b.products.length})}<br>${t('bk_warn')}</div>
       <div class="two-btns" style="margin-top:8px;">
-        <button class="secondary" id="restoreCancel">Cancel</button>
-        <button class="primary" id="restoreConfirm">Replace my data</button>
+        <button class="secondary" id="restoreCancel">${t('cancel')}</button>
+        <button class="primary" id="restoreConfirm">${t('bk_replace')}</button>
       </div>`;
   }
   return `<div class="t-card" style="margin-top:18px;">
-    <h3>Backup and restore</h3>
+    <h3>${t('bk_title')}</h3>
     <div class="t-sub" style="${stale ? 'color:var(--red);font-weight:700;' : ''}">${status}</div>
-    <div class="t-sub">Save a backup file now and then. If the app is ever reinstalled or its data is cleared, you can restore everything from it.</div>
+    <div class="t-sub">${t('bk_desc')}</div>
     <div class="two-btns" style="margin-top:8px;">
-      <button class="primary" id="backupDownload">Save backup</button>
-      <button class="secondary" id="backupRestorePick">Restore backup</button>
+      <button class="primary" id="backupDownload">${t('bk_save')}</button>
+      <button class="secondary" id="backupRestorePick">${t('bk_restore')}</button>
     </div>
     <input type="file" id="backupFile" accept=".json,application/json" style="display:none;">
     <div id="backupMsg" style="font-size:12px;margin-top:8px;color:var(--ink-soft);"></div>
@@ -1462,7 +1782,7 @@ function bindBackupHandlers(el){
     try{ await window.storage.set('last-backup', lastBackup); }catch(e){}
     renderHistory();
     const m = document.getElementById('backupMsg');
-    if(m) m.textContent = 'Backup saved to your Downloads folder.';
+    if(m) m.textContent = t('bk_saved');
   });
   const fileInput = el.querySelector('#backupFile');
   el.querySelector('#backupRestorePick').addEventListener('click', () => fileInput.click());
@@ -1479,7 +1799,7 @@ function bindBackupHandlers(el){
         renderHistory();
       }catch(e){
         msg.style.color = 'var(--red)';
-        msg.textContent = 'That file is not a Shrimp POS backup.';
+        msg.textContent = t('bk_badfile');
       }
     };
     reader.readAsText(f);
@@ -1501,7 +1821,7 @@ function bindBackupHandlers(el){
     await saveProducts(); await saveSales(); await savePurchases();
     renderSell(); updateTodayHeader(); renderHistory();
     const m = document.getElementById('backupMsg');
-    if(m) m.textContent = 'Backup restored.';
+    if(m) m.textContent = t('bk_restored');
   });
 }
 
@@ -1510,7 +1830,7 @@ let trendRange = 7;
 let calMonth = null;
 let calSelected = null;
 
-const DOW_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+let DOW_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 function dkey(d){
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -1545,6 +1865,8 @@ function salesInRange(start, endExclusive){
 }
 
 function renderTrends(){
+  DOW_SHORT = dowArr();
+  const rangeTxt = t(trendRange === 7 ? 'range_7' : 'range_30');
   const el = document.getElementById('tab-trends');
   if(!calMonth){ const n = new Date(); calMonth = new Date(n.getFullYear(), n.getMonth(), 1); }
   const today = startOfDay(new Date());
@@ -1570,26 +1892,26 @@ function renderTrends(){
   let deltaHtml = '';
   if(prevTotal > 0){
     const pct = ((rangeTotal - prevTotal) / prevTotal) * 100;
-    deltaHtml = `<span class="${pct >= 0 ? 'delta-up' : 'delta-down'}">${pct >= 0 ? '▲' : '▼'} ${Math.abs(pct).toFixed(0)}%</span> vs the previous ${trendRange} days (${PESO(prevTotal)})`;
+    deltaHtml = `<span class="${pct >= 0 ? 'delta-up' : 'delta-down'}">${pct >= 0 ? '▲' : '▼'} ${Math.abs(pct).toFixed(0)}%</span> ${t('vs_prev', {n: trendRange, amt: PESO(prevTotal)})}`;
   }else{
-    deltaHtml = `No sales in the previous ${trendRange} days to compare with.`;
+    deltaHtml = t('no_prev', {n: trendRange});
   }
 
   let html = `<div class="range-toggle">
-    <button data-range="7" class="${trendRange === 7 ? 'active' : ''}">Last 7 days</button>
-    <button data-range="30" class="${trendRange === 30 ? 'active' : ''}">Last 30 days</button>
+    <button data-range="7" class="${trendRange === 7 ? 'active' : ''}">${t('last7')}</button>
+    <button data-range="30" class="${trendRange === 30 ? 'active' : ''}">${t('last30')}</button>
   </div>`;
 
   html += `<div class="hist-summary">
-    <div class="hist-stat"><div class="n">${PESO(rangeTotal)}</div><div class="l">sales (${inRange.length} orders)</div></div>
-    <div class="hist-stat"><div class="n">${PESO(rangeTotal / trendRange)}</div><div class="l">average per day</div></div>
+    <div class="hist-stat"><div class="n">${PESO(rangeTotal)}</div><div class="l">${t('sales_orders', {n: inRange.length})}</div></div>
+    <div class="hist-stat"><div class="n">${PESO(rangeTotal / trendRange)}</div><div class="l">${t('avg_day')}</div></div>
   </div>
-  <div class="highlight-line">${deltaHtml}${maxDay > 0 ? `<br>Best day: <b>${DOW_SHORT[bestDay.date.getDay()]}, ${bestDay.date.toLocaleDateString('en-PH',{month:'short',day:'numeric'})}</b> with ${PESO(bestDay.total)}.` : ''}</div>`;
+  <div class="highlight-line">${deltaHtml}${maxDay > 0 ? `<br>${t('best_day_line', {day: '<b>' + DOW_SHORT[bestDay.date.getDay()] + ', ' + bestDay.date.toLocaleDateString(locale(),{month:'short',day:'numeric'}) + '</b>', amt: PESO(bestDay.total)})}` : ''}</div>`;
 
   /* daily bar chart */
-  html += `<div class="t-card"><h3>Daily sales</h3>`;
+  html += `<div class="t-card"><h3>${t('daily_sales')}</h3>`;
   if(rangeTotal === 0){
-    html += `<div class="empty-note" style="padding:20px;">No sales in this period yet.</div>`;
+    html += `<div class="empty-note" style="padding:20px;">${t('no_period')}</div>`;
   }else{
     html += `<div class="bars">` + days.map(d => {
       const h = maxDay > 0 ? Math.max(Math.round((d.total / maxDay) * 118), d.total > 0 ? 4 : 2) : 2;
@@ -1599,7 +1921,7 @@ function renderTrends(){
       if(trendRange === 7) return `<span>${DOW_SHORT[d.date.getDay()].slice(0,2)}<br>${d.date.getDate()}</span>`;
       return `<span>${i % 5 === 0 || i === days.length - 1 ? d.date.getDate() : ''}</span>`;
     }).join('') + `</div>`;
-    html += `<div class="t-sub" style="margin:8px 0 0 0;">Dark bar is your best day. Tap a day in the calendar below to see its orders.</div>`;
+    html += `<div class="t-sub" style="margin:8px 0 0 0;">${t('bar_hint')}</div>`;
   }
   html += `</div>`;
 
@@ -1615,10 +1937,10 @@ function renderTrends(){
   const nowMonth = new Date();
   const atCurrentMonth = (y === nowMonth.getFullYear() && mo === nowMonth.getMonth());
   html += `<div class="t-card"><div class="cal-head">
-    <button data-cal="-1" aria-label="Previous month">&lsaquo;</button>
-    <div style="text-align:center;"><div class="mname">${calMonth.toLocaleDateString('en-PH',{month:'long',year:'numeric'})}</div>
-    <div style="font-size:12px;color:var(--ink-soft);">${PESO(monthTotal)} this month</div></div>
-    <button data-cal="1" aria-label="Next month" ${atCurrentMonth ? 'style="opacity:.35"' : ''}>&rsaquo;</button>
+    <button data-cal="-1" aria-label="${t('prev_month')}">&lsaquo;</button>
+    <div style="text-align:center;"><div class="mname">${calMonth.toLocaleDateString(locale(),{month:'long',year:'numeric'})}</div>
+    <div style="font-size:12px;color:var(--ink-soft);">${t('this_month', {amt: PESO(monthTotal)})}</div></div>
+    <button data-cal="1" aria-label="${t('next_month')}" ${atCurrentMonth ? 'style="opacity:.35"' : ''}>&rsaquo;</button>
   </div><div class="cal-grid">`;
   DOW_SHORT.forEach(n => { html += `<div class="cal-dow">${n.slice(0,1)}</div>`; });
   for(let i = 0; i < firstDow; i++) html += `<div class="cal-cell empty"></div>`;
@@ -1637,19 +1959,19 @@ function renderTrends(){
     if(calSelected === k) cls.push('sel');
     html += `<div class="${cls.join(' ')}" data-day="${k}" style="${style}"><span class="dn">${d}</span><span class="da">${rec ? shortPeso(rec.total) : ''}</span></div>`;
   }
-  html += `</div><div class="cal-legend">Less <i style="background:rgba(232,115,74,.2)"></i><i style="background:rgba(232,115,74,.5)"></i><i style="background:rgba(232,115,74,.9)"></i> More sales</div>`;
+  html += `</div><div class="cal-legend">${t('less')} <i style="background:rgba(232,115,74,.2)"></i><i style="background:rgba(232,115,74,.5)"></i><i style="background:rgba(232,115,74,.9)"></i> ${t('more_sales')}</div>`;
 
   if(calSelected){
     const rec = byDay[calSelected];
     const parts = calSelected.split('-').map(Number);
     const dd = new Date(parts[0], parts[1]-1, parts[2]);
-    html += `<div class="day-detail"><div class="dd-title">${dd.toLocaleDateString('en-PH',{weekday:'long',month:'long',day:'numeric'})}</div>`;
+    html += `<div class="day-detail"><div class="dd-title">${dd.toLocaleDateString(locale(),{weekday:'long',month:'long',day:'numeric'})}</div>`;
     if(!rec){
-      html += `<div class="t-sub" style="margin:0;">No sales on this day.</div>`;
+      html += `<div class="t-sub" style="margin:0;">${t('no_sales_day')}</div>`;
     }else{
-      html += `<div class="t-sub" style="margin:0 0 6px 0;">${PESO(rec.total)} from ${rec.count} ${rec.count === 1 ? 'order' : 'orders'}</div>`;
+      html += `<div class="t-sub" style="margin:0 0 6px 0;">${t(rec.count === 1 ? 'day_total_one' : 'day_total_many', {amt: PESO(rec.total), n: rec.count})}</div>`;
       html += rec.list.slice().sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp)).map(s => {
-        const t = new Date(s.timestamp).toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'});
+        const t = new Date(s.timestamp).toLocaleTimeString(locale(),{hour:'numeric',minute:'2-digit'});
         const items = s.items.map(i => `${i.name} x${fmtQty(i.qty)}`).join(', ');
         return `<div class="day-sale"><span>${t}</span><span class="ds-items">${escapeHtml(items)}</span><span class="ds-amt">${PESO(s.total)}</span></div>`;
       }).join('');
@@ -1659,17 +1981,17 @@ function renderTrends(){
   html += `</div>`;
 
   /* busiest hours */
-  html += `<div class="t-card"><h3>Busiest hours</h3><div class="t-sub">Sales by time of day, ${trendRange === 7 ? 'last 7 days' : 'last 30 days'}.</div>`;
+  html += `<div class="t-card"><h3>${t('busiest')}</h3><div class="t-sub">${t('by_time', {range: rangeTxt})}</div>`;
   const hours = new Array(24).fill(0);
   inRange.forEach(s => { hours[new Date(s.timestamp).getHours()] += s.total; });
   const hMax = Math.max(...hours);
   if(hMax <= 0){
-    html += `<div class="t-sub" style="margin:0;">No sales yet in this period.</div>`;
+    html += `<div class="t-sub" style="margin:0;">${t('no_sales_yet')}</div>`;
   }else{
     const active = hours.map((v,h) => v > 0 ? h : -1).filter(h => h >= 0);
     const from = Math.min(...active), to = Math.max(...active);
     const bestH = hours.indexOf(hMax);
-    html += `<div class="highlight-line">Your best hour is <b>${hourLabel(bestH)}</b> with ${PESO(hMax)}.</div>`;
+    html += `<div class="highlight-line">${t('best_hour', {h: '<b>' + hourLabel(bestH) + '</b>', amt: PESO(hMax)})}</div>`;
     for(let h = from; h <= to; h++){
       const w = Math.round((hours[h] / hMax) * 100);
       html += `<div class="h-row"><span class="hl">${hourLabel(h)}</span><div class="hb"><div class="${h === bestH ? 'best' : ''}" style="width:${w}%"></div></div><span class="hv">${hours[h] > 0 ? PESO(hours[h]) : '-'}</span></div>`;
@@ -1678,17 +2000,17 @@ function renderTrends(){
   html += `</div>`;
 
   /* day of week */
-  html += `<div class="t-card"><h3>Best days of the week</h3><div class="t-sub">Average sales per day, ${trendRange === 7 ? 'last 7 days' : 'last 30 days'}.</div>`;
+  html += `<div class="t-card"><h3>${t('best_dow')}</h3><div class="t-sub">${t('avg_range', {range: rangeTxt})}</div>`;
   const dowTotal = new Array(7).fill(0), dowDays = new Array(7).fill(0);
   days.forEach(d => { dowTotal[d.date.getDay()] += d.total; dowDays[d.date.getDay()] += 1; });
   const dowAvg = dowTotal.map((t,i) => dowDays[i] > 0 ? t / dowDays[i] : null);
   const dowMax = Math.max(...dowAvg.map(v => v || 0));
   if(dowMax <= 0){
-    html += `<div class="t-sub" style="margin:0;">No sales yet in this period.</div>`;
+    html += `<div class="t-sub" style="margin:0;">${t('no_sales_yet')}</div>`;
   }else{
     const order = [1,2,3,4,5,6,0];
     const bestD = dowAvg.indexOf(dowMax);
-    html += `<div class="highlight-line">${DOW_SHORT[bestD]} is your strongest day, averaging ${PESO(dowMax)}.</div>`;
+    html += `<div class="highlight-line">${t('strongest', {d: DOW_SHORT[bestD], amt: PESO(dowMax)})}</div>`;
     order.forEach(i => {
       if(dowAvg[i] === null) return;
       const w = Math.round((dowAvg[i] / dowMax) * 100);
@@ -1706,9 +2028,9 @@ function renderTrends(){
     agg[i.name].rev += i.price * i.qty;
   }));
   const list = Object.values(agg).sort((a,b) => b.rev - a.rev);
-  html += `<div class="t-card"><h3>Best and slowest products</h3><div class="t-sub">Ranked by sales, ${trendRange === 7 ? 'last 7 days' : 'last 30 days'}.</div>`;
+  html += `<div class="t-card"><h3>${t('prod_rank')}</h3><div class="t-sub">${t('ranked', {range: rangeTxt})}</div>`;
   if(list.length === 0 || list[0].rev <= 0){
-    html += `<div class="t-sub" style="margin:0;">No product sales yet in this period.</div>`;
+    html += `<div class="t-sub" style="margin:0;">${t('no_prod_sales')}</div>`;
   }else{
     const top = list[0].rev;
     list.forEach((p, idx) => {
@@ -1716,11 +2038,11 @@ function renderTrends(){
       const slow = idx >= list.length - 2 && list.length > 3 && idx > 0;
       html += `<div style="margin-bottom:10px;">
         <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">
-          <span>${escapeHtml(p.name)}${p.rev === 0 ? '<span class="slow-tag">No sales</span>' : (slow ? '<span class="slow-tag">Slow</span>' : '')}</span>
+          <span>${escapeHtml(p.name)}${p.rev === 0 ? '<span class="slow-tag">' + t('tag_nosales') + '</span>' : (slow ? '<span class="slow-tag">' + t('tag_slow') + '</span>' : '')}</span>
           <span style="font-variant-numeric:tabular-nums;">${PESO(p.rev)}</span>
         </div>
         <div class="hb" style="background:var(--sand);border-radius:5px;height:10px;overflow:hidden;margin-top:4px;"><div style="height:100%;width:${w}%;background:${idx === 0 ? 'var(--teal)' : 'var(--coral)'};border-radius:5px;"></div></div>
-        <div style="font-size:11px;color:var(--ink-soft);margin-top:2px;">${fmtQty(p.qty)} ${escapeHtml(p.unit.replace('per ',''))} sold</div>
+        <div style="font-size:11px;color:var(--ink-soft);margin-top:2px;">${escapeHtml(t('sold_n', {qty: fmtQty(p.qty), unit: unitWord(p.unit)}))}</div>
       </div>`;
     });
   }
@@ -1748,7 +2070,9 @@ function renderTrends(){
 }
 
 /* ---------- TAB SWITCHING ---------- */
+let currentTab = 'sell';
 function switchTab(name){
+  currentTab = name;
   hideUndoToast();
   clearTimeout(clearPendingTimer);
   resetClearButtons();
@@ -1766,26 +2090,16 @@ function switchTab(name){
 
 /* ---------- TUTORIAL ---------- */
 const TOUR = [
-  {tab:'sell', target:null, title:'Welcome to your shrimp stall POS',
-   body:'This quick tour shows you how to sell, track your stock and see your profit. It takes about 2 minutes. You can replay it any time with the ? button at the top.'},
-  {tab:'products', target:'nav button[data-tab="products"]', title:'First, set up your products',
-   body:'Tap Products, then Edit on each item. Enter your selling price, what you pay for it (cost), and how much stock you have. The starting prices are samples, so replace them with your real ones.'},
-  {tab:'sell', target:'#tab-sell .product-card', title:'Tap a product to sell it',
-   body:'Each tap adds 1 unit (for example 1 kg) to the order. A number badge shows how many you added, and the line below the price shows how much stock is left.'},
-  {tab:'sell', target:'#tab-sell .chip-row', title:'Other ways to sell',
-   body:'By amount: the customer wants ₱100 worth. By weight: type kilos or grams. Edit price: for haggling. Choose "This sale only" for a one-time discount.'},
-  {tab:'sell', target:null, title:'Made a mistake?',
-   body:'After you tap a product, a black bar appears for 5 seconds with an Undo button. To cancel the whole order, tap Clear twice. Nothing is saved until you complete the sale.'},
-  {tab:'sell', target:null, title:'Checking out',
-   body:'When the order is ready, tap Checkout at the bottom. Check the items. Type the cash received to see the change, or leave it blank if the customer paid the exact amount. Then tap Complete sale. Your stock goes down automatically.'},
-  {tab:'inventory', target:'nav button[data-tab="inventory"]', title:'Watch your stock and money',
-   body:'Inventory shows how much of each product is left. Tap Restock when you buy more shrimp and enter what you paid. The cards at the top show your capital, income and ROI.'},
-  {tab:'trends', target:'nav button[data-tab="trends"]', title:'See what sells best',
-   body:'Trends shows your best days, busiest hours and top products. In the calendar, darker days sold more. Tap a day to see its orders. It fills up as you make sales.'},
-  {tab:'history', target:'#backupDownload', title:'Save a backup every day',
-   body:'History lists every sale. At the end of each day, tap Save backup here. If your phone or the app is ever reset, you can restore all your records from that file.'},
-  {tab:'sell', target:null, title:'You are ready to start',
-   body:'Start with the Products tab, then make your first sale. Tap the ? button at the top any time to see this tour again.'}
+  {tab:'sell', target:null, k:'t1'},
+  {tab:'products', target:'nav button[data-tab="products"]', k:'t2'},
+  {tab:'sell', target:'#tab-sell .product-card', k:'t3'},
+  {tab:'sell', target:'#tab-sell .chip-row', k:'t4'},
+  {tab:'sell', target:null, k:'t5'},
+  {tab:'sell', target:null, k:'t6'},
+  {tab:'inventory', target:'nav button[data-tab="inventory"]', k:'t7'},
+  {tab:'trends', target:'nav button[data-tab="trends"]', k:'t8'},
+  {tab:'history', target:'#backupDownload', k:'t9'},
+  {tab:'sell', target:null, k:'t10'}
 ];
 let tourIdx = 0;
 let tourOn = false;
@@ -1809,12 +2123,13 @@ async function endTour(){
 function showTourStep(){
   const s = TOUR[tourIdx];
   if(s.tab) switchTab(s.tab);
-  document.getElementById('tcStep').textContent = 'Step ' + (tourIdx + 1) + ' of ' + TOUR.length;
-  document.getElementById('tcTitle').textContent = s.title;
-  document.getElementById('tcBody').textContent = s.body;
+  document.getElementById('tcStep').textContent = t('tour_step', {n: tourIdx + 1, total: TOUR.length});
+  document.getElementById('tcTitle').textContent = t(s.k + '_title');
+  document.getElementById('tcBody').textContent = t(s.k + '_body');
   document.getElementById('tcDots').innerHTML = TOUR.map((_, i) => `<i class="${i === tourIdx ? 'on' : ''}"></i>`).join('');
+  document.getElementById('tcBack').textContent = t('tour_back');
   document.getElementById('tcBack').style.visibility = tourIdx === 0 ? 'hidden' : 'visible';
-  document.getElementById('tcNext').textContent = tourIdx === TOUR.length - 1 ? 'Start selling' : 'Next';
+  document.getElementById('tcNext').textContent = t(tourIdx === TOUR.length - 1 ? 'tour_start' : 'tour_next');
   document.getElementById('tcSkip').style.visibility = tourIdx === TOUR.length - 1 ? 'hidden' : 'visible';
   const ring = document.getElementById('tourRing');
   ring.style.display = 'none';
@@ -1856,8 +2171,10 @@ window.addEventListener('resize', positionTour);
 
 /* ---------- INIT ---------- */
 async function init(){
+  await loadLang();
+  applyStaticI18n();
   setTodayDate();
-  document.getElementById('tab-sell').innerHTML = '<div class="loading">Loading your shop...</div>';
+  document.getElementById('tab-sell').innerHTML = '<div class="loading">' + t('loading') + '</div>';
   await loadData();
   renderSell();
   updateTodayHeader();
@@ -1923,10 +2240,15 @@ async function init(){
   });
   document.getElementById('tcSkip').addEventListener('click', endTour);
 
-  try{
-    const td = await window.storage.get('tour-done', false);
-    if(!td && sales.length === 0) startTour();
-  }catch(e){}
+  document.getElementById('langBtn').addEventListener('click', () => openLangModal(false));
+  document.getElementById('closeLang').addEventListener('click', closeLangModal);
+  document.getElementById('langModal').addEventListener('click', (e) => {
+    if(e.target.id === 'langModal' && !langFirstRun) closeLangModal();
+  });
+  applyStaticI18n();
+
+  if(!langStored && sales.length === 0) openLangModal(true);
+  else await maybeStartTour();
 }
 
 init();
