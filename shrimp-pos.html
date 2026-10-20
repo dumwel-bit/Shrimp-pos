@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Shrimp Stall POS</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0F3D3E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root{
+    --teal:#0F3D3E;
+    --teal-dark:#0A2B2C;
+    --sand:#F7F0E1;
+    --card:#FFFFFF;
+    --coral:#E8734A;
+    --coral-dark:#C65A34;
+    --ink:#22302E;
+    --ink-soft:#5C6D69;
+    --line:#E4DCC8;
+    --green:#3E7D5A;
+    --red:#B4432F;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--sand);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none;
+    padding-bottom:90px;
+  }
+  header{
+    background:var(--teal);
+    color:#fff;
+    padding:16px 16px 0 16px;
+    position:sticky;
+    top:0;
+    z-index:20;
+  }
+  .brand-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+  .brand-name{font-size:20px;font-weight:700;letter-spacing:0.2px;}
+  .brand-sub{font-size:12px;color:#B9D6CE;margin-top:2px;}
+  .today-stat{text-align:right;}
+  .today-stat .num{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .today-stat .label{font-size:11px;color:#B9D6CE;}
+  nav{display:flex;gap:4px;margin-top:14px;}
+  nav button{
+    flex:1;
+    background:transparent;
+    border:none;
+    color:#B9D6CE;
+    font-size:12px;
+    font-weight:600;
+    padding:10px 2px 12px 2px;
+    border-bottom:3px solid transparent;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  nav button.active{color:#fff;border-bottom-color:var(--coral);}
+
+  main{padding:16px;max-width:640px;margin:0 auto;}
+
+  /* Sell tab */
+  .product-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .product-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px;
+    cursor:pointer;
+    position:relative;
+    min-height:88px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+  }
+  .product-card:active{transform:scale(0.97);}
+  .product-card .pname{font-weight:700;font-size:15px;line-height:1.25;}
+  .product-card .pmeta{font-size:12px;color:var(--ink-soft);margin-top:6px;}
+  .product-card .pprice{font-size:15px;font-weight:700;color:var(--coral-dark);margin-top:8px;font-variant-numeric:tabular-nums;}
+  .qty-badge{
+    position:absolute;top:-8px;right:-8px;
+    background:var(--coral);color:#fff;
+    min-width:26px;height:26px;border-radius:13px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:700;padding:0 6px;
+  }
+  .amt-chip{
+    align-self:flex-start;margin-top:8px;
+    background:var(--sand);border:1px solid var(--line);color:var(--teal);
+    font-size:11px;font-weight:700;padding:5px 9px;border-radius:8px;cursor:pointer;
+  }
+  .amt-chip:active{transform:scale(0.96);}
+  .chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .chip-row .amt-chip{margin-top:0;align-self:auto;}
+  .pprice .was{font-size:12px;text-decoration:line-through;color:#B0A78F;font-weight:600;margin-right:4px;}
+  .unit-toggle{display:flex;gap:8px;margin-top:10px;}
+  .unit-toggle button{
+    flex:1;padding:10px;border-radius:9px;border:1px solid var(--line);
+    background:#fff;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;
+  }
+  .unit-toggle button.active{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .two-btns{display:flex;gap:8px;margin-top:16px;}
+  .two-btns button{
+    flex:1;padding:14px 8px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;border:none;
+  }
+  .two-btns .primary{background:var(--coral);color:#fff;}
+  .two-btns .secondary{background:#fff;border:1px solid var(--line);color:var(--teal);}
+  .two-btns button:disabled{background:#D8C9AE;color:#8C826E;border-color:#D8C9AE;cursor:not-allowed;}
+  .quick-amts{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap;}
+  .quick-amts button{
+    flex:1;min-width:64px;padding:10px 4px;border-radius:9px;border:1px solid var(--line);
+    background:#fff;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;
+  }
+  .quick-amts button.active{background:var(--coral);border-color:var(--coral);color:#fff;}
+  .amt-preview{
+    background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:12px;
+    font-size:13px;color:var(--ink-soft);
+  }
+  .amt-preview .qv2{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .empty-note{
+    text-align:center;color:var(--ink-soft);font-size:14px;
+    padding:40px 20px;
+  }
+
+  /* Cart bar */
+  .cart-bar{
+    position:fixed;left:0;right:0;bottom:0;
+    background:var(--teal);
+    color:#fff;
+    padding:14px 16px;
+    display:flex;justify-content:space-between;align-items:center;
+    z-index:30;
+    box-shadow:0 -4px 14px rgba(0,0,0,0.15);
+  }
+  .cart-bar.hidden{display:none;}
+  .cart-bar .left{font-size:14px;}
+  .cart-bar .left .amt{font-size:18px;font-weight:700;display:block;font-variant-numeric:tabular-nums;}
+  .cart-bar button{
+    background:var(--coral);color:#fff;border:none;border-radius:10px;
+    padding:12px 22px;font-size:15px;font-weight:700;cursor:pointer;
+  }
+
+  .undo-toast{
+    position:fixed;left:16px;right:16px;
+    bottom:76px;
+    max-width:608px;margin:0 auto;
+    background:var(--ink);color:#fff;
+    border-radius:12px;
+    padding:12px 14px;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    z-index:40;
+    box-shadow:0 6px 18px rgba(0,0,0,0.2);
+  }
+  .undo-toast.hidden{display:none;}
+  .undo-toast .msg{font-size:13px;line-height:1.4;}
+  .undo-toast button{
+    background:none;border:1px solid rgba(255,255,255,0.4);color:#fff;
+    padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;
+    white-space:nowrap;
+  }
+
+  /* Modal */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(15,61,62,0.45);
+    display:flex;align-items:flex-end;justify-content:center;
+    z-index:50;
+  }
+  .modal-overlay.hidden{display:none;}
+  .modal-sheet{
+    background:var(--sand);width:100%;max-width:640px;
+    border-radius:20px 20px 0 0;
+    max-height:88vh;overflow-y:auto;
+    padding:18px 18px 24px 18px;
+  }
+  .modal-title{font-size:18px;font-weight:700;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+  .modal-title .close{color:var(--ink-soft);font-size:22px;cursor:pointer;padding:4px 8px;}
+
+  .cart-row{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:10px 12px;display:flex;align-items:center;gap:10px;margin-bottom:8px;
+  }
+  .cart-row .info{flex:1;}
+  .cart-row .cname{font-weight:700;font-size:14px;}
+  .cart-row .cline{font-size:12px;color:var(--ink-soft);margin-top:2px;font-variant-numeric:tabular-nums;}
+  .cart-row .cline .strike{text-decoration:line-through;color:#B0A78F;}
+  .editPrice{
+    display:block;margin-top:6px;background:none;border:none;color:var(--teal);
+    font-size:12px;font-weight:700;cursor:pointer;padding:2px 0;
+  }
+  .discount-badge{
+    display:inline-block;background:var(--sand);color:var(--coral-dark);
+    font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;margin-left:6px;vertical-align:middle;
+  }
+  .price-editor{margin-top:6px;}
+  .price-editor label{font-size:11px;color:var(--ink-soft);font-weight:600;display:block;margin-bottom:4px;}
+  .price-editor input{
+    width:100%;padding:9px;border-radius:8px;border:1px solid var(--line);
+    font-size:15px;background:#fff;color:var(--ink);font-variant-numeric:tabular-nums;
+  }
+  .price-editor-btns{display:flex;gap:8px;margin-top:8px;}
+  .price-editor-btns button{
+    flex:1;padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;
+  }
+  .price-editor-btns .priceSave{background:var(--coral);color:#fff;}
+  .price-editor-btns .priceCancel{background:#fff;border:1px solid var(--line);color:var(--ink-soft);}
+  .stepper{display:flex;align-items:center;gap:8px;}
+  .stepper button{
+    width:30px;height:30px;border-radius:8px;border:1px solid var(--line);
+    background:#fff;font-size:16px;font-weight:700;cursor:pointer;color:var(--ink);
+  }
+  .stepper .qv{min-width:22px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;}
+  .remove-x{color:var(--red);font-size:13px;font-weight:700;background:none;border:none;cursor:pointer;padding:4px;}
+
+  .summary-block{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;}
+  .summary-line{display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px;font-variant-numeric:tabular-nums;}
+  .summary-line.total{font-size:18px;font-weight:700;border-top:1px solid var(--line);padding-top:10px;margin-top:6px;}
+
+  .cash-row{margin-top:14px;}
+  .cash-row label{font-size:13px;color:var(--ink-soft);font-weight:600;}
+  .cash-row input{
+    width:100%;margin-top:6px;padding:12px;border-radius:10px;border:1px solid var(--line);
+    font-size:18px;font-variant-numeric:tabular-nums;background:#fff;color:var(--ink);
+  }
+  .change-line{margin-top:10px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .change-line.negative{color:var(--red);}
+  .change-line.positive{color:var(--green);}
+
+  .complete-btn{
+    width:100%;margin-top:16px;padding:15px;background:var(--coral);color:#fff;
+    border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;
+  }
+  .complete-btn:disabled{background:#D8C9AE;color:#8C826E;cursor:not-allowed;}
+
+  /* Products tab */
+  .prod-manage-row{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:8px;
+  }
+  .prod-manage-row .info{flex:1;}
+  .prod-manage-row .pname2{font-weight:700;font-size:14px;}
+  .prod-manage-row .pmeta2{font-size:12px;color:var(--ink-soft);margin-top:2px;font-variant-numeric:tabular-nums;}
+  .icon-btn{background:none;border:none;font-size:13px;font-weight:700;cursor:pointer;padding:6px 8px;}
+  .icon-btn.edit{color:var(--teal);}
+  .icon-btn.del{color:var(--red);}
+
+  .add-form{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px;
+  }
+  .add-form h3{margin:0 0 10px 0;font-size:15px;}
+  .add-form label{font-size:12px;color:var(--ink-soft);font-weight:600;display:block;margin-bottom:4px;margin-top:10px;}
+  .add-form input,.add-form select{
+    width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);font-size:14px;background:#fff;color:var(--ink);
+  }
+  .form-btn-row{display:flex;gap:8px;margin-top:14px;}
+  .form-btn-row button{
+    flex:1;padding:11px;border-radius:9px;border:none;font-size:14px;font-weight:700;cursor:pointer;
+  }
+  .form-btn-row .save{background:var(--coral);color:#fff;}
+  .form-btn-row .cancel{background:#fff;border:1px solid var(--line);color:var(--ink-soft);}
+  .fab-add{
+    width:100%;padding:13px;border-radius:12px;border:2px dashed var(--line);background:transparent;
+    color:var(--ink-soft);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:14px;
+  }
+
+  /* History tab */
+  .sale-card{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;
+  }
+  .sale-top{display:flex;justify-content:space-between;align-items:baseline;}
+  .sale-time{font-size:12px;color:var(--ink-soft);}
+  .sale-total{font-weight:700;font-size:15px;color:var(--coral-dark);font-variant-numeric:tabular-nums;}
+  .sale-items{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+  .hist-summary{
+    display:flex;gap:10px;margin-bottom:14px;
+  }
+  .hist-stat{
+    flex:1;background:var(--teal);color:#fff;border-radius:12px;padding:12px;
+  }
+  .hist-stat .n{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .hist-stat .l{font-size:11px;color:#B9D6CE;margin-top:2px;}
+
+  .loading{text-align:center;padding:40px;color:var(--ink-soft);font-size:14px;}
+
+  /* Sell tab stock note */
+  .stock-note{font-size:11px;color:var(--ink-soft);margin-top:4px;font-variant-numeric:tabular-nums;}
+  .stock-note.low{color:var(--coral-dark);font-weight:700;}
+  .stock-note.out{color:var(--red);font-weight:700;}
+
+  /* Inventory tab */
+  .fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;}
+  .fin-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;}
+  .fin-card .fl{font-size:11px;color:var(--ink-soft);font-weight:600;}
+  .fin-card .fv{font-size:17px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums;color:var(--ink);}
+  .fin-card.accent .fv{color:var(--coral-dark);}
+  .fin-card.positive .fv{color:var(--green);}
+  .fin-card.negative .fv{color:var(--red);}
+  .fin-note{font-size:11px;color:var(--ink-soft);margin:0 0 16px 2px;line-height:1.5;}
+  .section-label{font-size:13px;font-weight:700;color:var(--ink);margin:18px 0 10px 2px;}
+
+  .stock-row{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:8px;
+  }
+  .stock-row.low-flag{border-color:var(--coral);}
+  .stock-row .info{flex:1;}
+  .stock-row .sname{font-weight:700;font-size:14px;}
+  .stock-row .smeta{font-size:12px;color:var(--ink-soft);margin-top:2px;font-variant-numeric:tabular-nums;}
+  .low-badge{
+    display:inline-block;background:#FBE5DC;color:var(--coral-dark);font-size:10px;font-weight:700;
+    padding:2px 7px;border-radius:6px;margin-left:6px;vertical-align:middle;
+  }
+  .out-badge{
+    display:inline-block;background:#F6D9D5;color:var(--red);font-size:10px;font-weight:700;
+    padding:2px 7px;border-radius:6px;margin-left:6px;vertical-align:middle;
+  }
+  .restock-btn{
+    background:var(--teal);color:#fff;border:none;border-radius:9px;
+    padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;
+  }
+
+  /* Trends tab */
+  .range-toggle{display:flex;gap:8px;margin-bottom:12px;}
+  .range-toggle button{
+    flex:1;padding:10px;border-radius:9px;border:1px solid var(--line);
+    background:#fff;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;
+  }
+  .range-toggle button.active{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .t-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;}
+  .t-card h3{margin:0 0 10px 0;font-size:14px;}
+  .t-sub{font-size:12px;color:var(--ink-soft);margin:-6px 0 10px 0;line-height:1.4;}
+  .delta-up{color:var(--green);font-weight:700;}
+  .delta-down{color:var(--red);font-weight:700;}
+  .bars{display:flex;align-items:flex-end;gap:3px;height:130px;padding-top:8px;}
+  .bar-col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;min-width:0;}
+  .bar{width:100%;background:var(--coral);border-radius:4px 4px 0 0;min-height:2px;}
+  .bar.zero{background:var(--line);}
+  .bar.best{background:var(--teal);}
+  .bar-lbls{display:flex;gap:3px;margin-top:4px;}
+  .bar-lbls span{flex:1;text-align:center;font-size:10px;color:var(--ink-soft);min-width:0;overflow:visible;white-space:nowrap;}
+  .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .cal-head .mname{font-weight:700;font-size:15px;}
+  .cal-head button{
+    width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:#fff;
+    font-size:16px;font-weight:700;color:var(--ink);cursor:pointer;
+  }
+  .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;}
+  .cal-dow{text-align:center;font-size:11px;color:var(--ink-soft);font-weight:700;padding-bottom:2px;}
+  .cal-cell{
+    min-height:48px;border-radius:8px;border:1px solid var(--line);background:#fff;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+    font-size:12px;cursor:pointer;padding:2px 0;
+  }
+  .cal-cell.empty{border:none;background:transparent;cursor:default;}
+  .cal-cell .dn{font-weight:700;font-size:12px;}
+  .cal-cell .da{font-size:10px;font-variant-numeric:tabular-nums;}
+  .cal-cell.today{outline:2px solid var(--teal);}
+  .cal-cell.sel{outline:3px solid var(--ink);}
+  .cal-legend{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-soft);margin-top:10px;}
+  .cal-legend i{display:inline-block;width:18px;height:10px;border-radius:3px;}
+  .day-detail{margin-top:12px;border-top:1px solid var(--line);padding-top:12px;}
+  .day-detail .dd-title{font-weight:700;font-size:14px;margin-bottom:6px;}
+  .day-sale{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:6px 0;border-bottom:1px dashed var(--line);}
+  .day-sale .ds-items{color:var(--ink-soft);flex:1;}
+  .day-sale .ds-amt{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .h-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;}
+  .h-row .hl{width:46px;color:var(--ink-soft);flex-shrink:0;}
+  .h-row .hb{flex:1;background:var(--sand);border-radius:5px;height:16px;overflow:hidden;}
+  .h-row .hb div{height:100%;background:var(--coral);border-radius:5px;}
+  .h-row .hb div.best{background:var(--teal);}
+  .h-row .hv{width:72px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700;flex-shrink:0;}
+  .highlight-line{background:var(--sand);border-radius:9px;padding:9px 11px;font-size:12px;margin-bottom:10px;line-height:1.5;}
+  .slow-tag{display:inline-block;background:#F6D9D5;color:var(--red);font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;margin-left:6px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-row">
+    <div>
+      <div class="brand-name">🦐 Shrimp Stall</div>
+      <div class="brand-sub" id="todayDate">-</div>
+    </div>
+    <div class="today-stat">
+      <div class="num" id="todayTotal">₱0</div>
+      <div class="label">today's sales</div>
+    </div>
+  </div>
+  <nav>
+    <button class="active" data-tab="sell">Sell</button>
+    <button data-tab="products">Products</button>
+    <button data-tab="inventory">Inventory</button>
+    <button data-tab="trends">Trends</button>
+    <button data-tab="history">History</button>
+  </nav>
+</header>
+
+<main>
+  <div id="tab-sell"></div>
+  <div id="tab-products" style="display:none;"></div>
+  <div id="tab-inventory" style="display:none;"></div>
+  <div id="tab-trends" style="display:none;"></div>
+  <div id="tab-history" style="display:none;"></div>
+</main>
+
+<div class="cart-bar hidden" id="cartBar">
+  <div class="left">
+    <span id="cartCount">0 items</span>
+    <span class="amt" id="cartAmt">₱0</span>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button id="clearCartBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.4);color:#fff;">Clear</button>
+    <button id="viewCartBtn">Checkout</button>
+  </div>
+</div>
+
+<div class="undo-toast hidden" id="undoToast">
+  <span class="msg" id="undoMsg"></span>
+  <button id="undoBtn">Undo</button>
+</div>
+
+<div class="modal-overlay hidden" id="cartModal">
+  <div class="modal-sheet">
+    <div class="modal-title">
+      <span>Current order</span>
+      <span class="close" id="closeCart">&times;</span>
+    </div>
+    <div id="cartRows"></div>
+    <button id="clearCartBtnModal" style="width:100%;padding:10px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--red);font-size:13px;font-weight:700;cursor:pointer;margin-top:4px;">Cancel whole order</button>
+    <div class="summary-block">
+      <div class="summary-line total"><span>Total</span><span id="modalTotal">₱0</span></div>
+      <div class="cash-row">
+        <label for="cashInput">Cash received (optional — leave blank if paid exact)</label>
+        <input type="number" id="cashInput" inputmode="decimal" placeholder="0.00">
+        <div class="change-line" id="changeLine"></div>
+      </div>
+    </div>
+    <button class="complete-btn" id="completeBtn" disabled>Complete sale</button>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="amtModal">
+  <div class="modal-sheet">
+    <div class="modal-title">
+      <span id="amtModalTitle">Add by amount</span>
+      <span class="close" id="closeAmt">&times;</span>
+    </div>
+    <div class="cash-row">
+      <label for="amtInput">Customer wants to spend</label>
+      <input type="number" id="amtInput" inputmode="decimal" placeholder="0.00">
+    </div>
+    <div class="quick-amts" id="quickAmts"></div>
+    <div class="amt-preview" id="amtPreview"></div>
+    <div id="amtError" style="color:var(--red);font-size:12px;margin-top:8px;"></div>
+    <button class="complete-btn" id="amtAddBtn">Add to order</button>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="weightModal">
+  <div class="modal-sheet">
+    <div class="modal-title">
+      <span id="weightModalTitle">Add by weight</span>
+      <span class="close" id="closeWeight">&times;</span>
+    </div>
+    <div class="unit-toggle" id="weightUnitToggle">
+      <button data-u="kg" class="active">Kilograms</button>
+      <button data-u="g">Grams</button>
+    </div>
+    <div class="cash-row">
+      <label for="weightInput" id="weightLabel">Weight (kg)</label>
+      <input type="number" id="weightInput" inputmode="decimal" placeholder="0">
+    </div>
+    <div class="quick-amts" id="quickWeights"></div>
+    <div class="amt-preview" id="weightPreview"></div>
+    <div id="weightError" style="color:var(--red);font-size:12px;margin-top:8px;"></div>
+    <button class="complete-btn" id="weightAddBtn">Add to order</button>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="priceModal">
+  <div class="modal-sheet">
+    <div class="modal-title">
+      <span id="priceModalTitle">Edit price</span>
+      <span class="close" id="closePrice">&times;</span>
+    </div>
+    <div class="cash-row">
+      <label for="priceModalInput" id="priceModalLabel">New price</label>
+      <input type="number" id="priceModalInput" inputmode="decimal" placeholder="0.00">
+    </div>
+    <div class="amt-preview" id="pricePreview"></div>
+    <div id="priceModalError" style="color:var(--red);font-size:12px;margin-top:8px;"></div>
+    <div class="two-btns">
+      <button class="secondary" id="priceThisSale">This sale only</button>
+      <button class="primary" id="priceSaveNew">Save as new price</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="restockModal">
+  <div class="modal-sheet">
+    <div class="modal-title">
+      <span id="restockModalTitle">Restock</span>
+      <span class="close" id="closeRestock">&times;</span>
+    </div>
+    <div class="cash-row">
+      <label for="restockQty">Quantity added</label>
+      <input type="number" id="restockQty" inputmode="decimal" placeholder="0">
+    </div>
+    <div class="cash-row">
+      <label for="restockCost">Cost paid per unit</label>
+      <input type="number" id="restockCost" inputmode="decimal" placeholder="0.00">
+    </div>
+    <div class="amt-preview" id="restockPreview"></div>
+    <div id="restockError" style="color:var(--red);font-size:12px;margin-top:8px;"></div>
+    <button class="complete-btn" id="restockAddBtn">Add to stock</button>
+  </div>
+</div>
+
+<script>
+if(!window.storage){
+  window.storage = {
+    async get(key){
+      try{
+        const v = localStorage.getItem('shrimppos:' + key);
+        return v === null ? null : {key, value: v};
+      }catch(e){ return null; }
+    },
+    async set(key, value){
+      localStorage.setItem('shrimppos:' + key, value);
+      return {key, value};
+    }
+  };
+}
+const PESO =v => '₱' + Number(v || 0).toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+let products = [];
+let sales = [];
+let purchases = [];
+let cart = {};
+let editingProductId = null;
+let dataReady = false;
+
+const defaultProducts = [
+  {id:'p1', name:'Small shrimp', unit:'per kg', price:280, costPrice:190, stock:10, lowStock:2},
+  {id:'p2', name:'Medium shrimp', unit:'per kg', price:340, costPrice:230, stock:10, lowStock:2},
+  {id:'p3', name:'Large shrimp', unit:'per kg', price:420, costPrice:290, stock:8, lowStock:2},
+  {id:'p4', name:'Jumbo shrimp', unit:'per kg', price:520, costPrice:360, stock:6, lowStock:1},
+  {id:'p5', name:'Peeled shrimp', unit:'per kg', price:460, costPrice:320, stock:5, lowStock:1},
+  {id:'p6', name:'Shrimp (tray)', unit:'per tray', price:150, costPrice:95, stock:20, lowStock:4},
+];
+
+async function loadData(){
+  try{
+    const p = await window.storage.get('products', false);
+    products = p ? JSON.parse(p.value) : defaultProducts;
+  }catch(e){
+    products = defaultProducts;
+    try{ await window.storage.set('products', JSON.stringify(products), false); }catch(e2){}
+  }
+  products.forEach(p => {
+    if(typeof p.costPrice !== 'number') p.costPrice = 0;
+    if(typeof p.stock !== 'number') p.stock = 0;
+    if(typeof p.lowStock !== 'number') p.lowStock = 1;
+  });
+  try{
+    const s = await window.storage.get('sales-log', false);
+    sales = s ? JSON.parse(s.value) : [];
+  }catch(e){
+    sales = [];
+  }
+  try{
+    const pu = await window.storage.get('purchases-log', false);
+    purchases = pu ? JSON.parse(pu.value) : [];
+  }catch(e){
+    purchases = [];
+  }
+  try{
+    const lb = await window.storage.get('last-backup', false);
+    lastBackup = lb ? lb.value : null;
+  }catch(e){ lastBackup = null; }
+  try{
+    if(navigator.storage && navigator.storage.persist) await navigator.storage.persist();
+  }catch(e){}
+  dataReady = true;
+}
+
+async function saveProducts(){
+  try{ await window.storage.set('products', JSON.stringify(products), false); }
+  catch(e){ console.error('Could not save products', e); }
+}
+async function saveSales(){
+  try{ await window.storage.set('sales-log', JSON.stringify(sales), false); }
+  catch(e){ console.error('Could not save sales', e); }
+}
+async function savePurchases(){
+  try{ await window.storage.set('purchases-log', JSON.stringify(purchases), false); }
+  catch(e){ console.error('Could not save purchases', e); }
+}
+
+function uid(){ return 'id' + Date.now() + Math.floor(Math.random()*1000); }
+
+function fmtQty(qty){
+  if(Number.isInteger(qty)) return String(qty);
+  return (Math.round(qty * 1000) / 1000).toString();
+}
+
+let sessionPrice = {};
+function curPrice(p){
+  return (sessionPrice[p.id] !== undefined) ? sessionPrice[p.id] : p.price;
+}
+
+function setTodayDate(){
+  const d = new Date();
+  document.getElementById('todayDate').textContent = d.toLocaleDateString('en-PH', {weekday:'long', month:'short', day:'numeric'});
+}
+
+function todayTotal(){
+  const today = new Date().toDateString();
+  return sales.filter(s => new Date(s.timestamp).toDateString() === today)
+              .reduce((sum,s) => sum + s.total, 0);
+}
+
+function updateTodayHeader(){
+  document.getElementById('todayTotal').textContent = PESO(todayTotal());
+}
+
+/* ---------- SELL TAB ---------- */
+function renderSell(){
+  const el = document.getElementById('tab-sell');
+  if(products.length === 0){
+    el.innerHTML = '<div class="empty-note">No products yet. Add some in the Products tab.</div>';
+  }else{
+    el.innerHTML = '<div class="product-grid">' + products.map(p => {
+      const qty = cart[p.id] ? cart[p.id].qty : 0;
+      const low = p.stock <= p.lowStock;
+      const out = p.stock <= 0;
+      return `<div class="product-card" data-id="${p.id}">
+        ${qty > 0 ? `<div class="qty-badge">${fmtQty(qty)}</div>` : ''}
+        <div class="pname">${escapeHtml(p.name)}</div>
+        <div>
+          <div class="pmeta">${escapeHtml(p.unit)}</div>
+          <div class="pprice">${curPrice(p) !== p.price ? `<span class="was">${PESO(p.price)}</span>` : ''}${PESO(curPrice(p))}</div>
+          <div class="stock-note ${out ? 'out' : (low ? 'low' : '')}">${out ? 'Out of stock' : fmtQty(p.stock) + ' left'}</div>
+          <div class="chip-row">
+            <button class="amt-chip" data-act="amount" data-id="${p.id}">By amount</button>
+            ${/kg/i.test(p.unit) ? `<button class="amt-chip" data-act="weight" data-id="${p.id}">By weight</button>` : ''}
+            <button class="amt-chip" data-act="price" data-id="${p.id}">Edit price</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+    el.querySelectorAll('.product-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if(e.target.closest('.amt-chip')) return;
+        const id = card.dataset.id;
+        addToCart(id);
+      });
+    });
+    el.querySelectorAll('.amt-chip').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const act = chip.dataset.act;
+        if(act === 'amount') openAmountModal(chip.dataset.id);
+        else if(act === 'weight') openWeightModal(chip.dataset.id);
+        else if(act === 'price') openPriceModal(chip.dataset.id);
+      });
+    });
+  }
+  updateCartBar();
+}
+
+function addToCart(id){
+  const p = products.find(x => x.id === id);
+  if(!p) return;
+  if(!cart[id]) cart[id] = {qty:0, price:curPrice(p), originalPrice:p.price, costPrice:p.costPrice||0, name:p.name, unit:p.unit};
+  cart[id].qty += 1;
+  renderSell();
+  showUndoToast('Added ' + p.name + ' (' + p.unit + ')', () => {
+    if(cart[id]){
+      cart[id].qty -= 1;
+      if(cart[id].qty <= 0) delete cart[id];
+    }
+    renderSell();
+  });
+}
+
+let undoTimer = null;
+function showUndoToast(message, undoFn){
+  clearTimeout(undoTimer);
+  document.getElementById('undoMsg').textContent = message;
+  const oldBtn = document.getElementById('undoBtn');
+  const newBtn = oldBtn.cloneNode(true);
+  oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+  newBtn.addEventListener('click', () => {
+    undoFn();
+    hideUndoToast();
+  });
+  document.getElementById('undoToast').classList.remove('hidden');
+  undoTimer = setTimeout(hideUndoToast, 5000);
+}
+function hideUndoToast(){
+  document.getElementById('undoToast').classList.add('hidden');
+  clearTimeout(undoTimer);
+}
+
+function cartCountAndTotal(){
+  let count = 0, total = 0;
+  Object.values(cart).forEach(c => { count += c.qty; total += c.qty * c.price; });
+  return {count, total};
+}
+
+let clearPending = false;
+let clearPendingTimer = null;
+
+function clearCart(){
+  const {count} = cartCountAndTotal();
+  if(count === 0) return;
+  const btn1 = document.getElementById('clearCartBtn');
+  const btn2 = document.getElementById('clearCartBtnModal');
+
+  if(!clearPending){
+    clearPending = true;
+    btn1.textContent = 'Tap to confirm';
+    btn1.style.background = 'var(--red)';
+    btn1.style.borderColor = 'var(--red)';
+    btn2.textContent = 'Tap again to cancel everything';
+    clearPendingTimer = setTimeout(resetClearButtons, 3500);
+    return;
+  }
+
+  clearTimeout(clearPendingTimer);
+  resetClearButtons();
+  cart = {};
+  sessionPrice = {};
+  hideUndoToast();
+  renderSell();
+  if(!document.getElementById('cartModal').classList.contains('hidden')){
+    closeCartModal();
+  }
+}
+
+function resetClearButtons(){
+  clearPending = false;
+  const btn1 = document.getElementById('clearCartBtn');
+  const btn2 = document.getElementById('clearCartBtnModal');
+  if(btn1){
+    btn1.textContent = 'Clear';
+    btn1.style.background = 'transparent';
+    btn1.style.borderColor = 'rgba(255,255,255,0.4)';
+  }
+  if(btn2){
+    btn2.textContent = 'Cancel whole order';
+  }
+}
+
+function updateCartBar(){
+  const {count, total} = cartCountAndTotal();
+  const bar = document.getElementById('cartBar');
+  if(count === 0){ bar.classList.add('hidden'); clearTimeout(clearPendingTimer); resetClearButtons(); return; }
+  bar.classList.remove('hidden');
+  document.getElementById('cartCount').textContent = count + (count === 1 ? ' item' : ' items');
+  document.getElementById('cartAmt').textContent = PESO(total);
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+/* ---------- CART MODAL ---------- */
+function openCartModal(){
+  renderCartModal();
+  document.getElementById('cartModal').classList.remove('hidden');
+  document.getElementById('cashInput').value = '';
+  updateChangeLine();
+}
+function closeCartModal(){
+  document.getElementById('cartModal').classList.add('hidden');
+}
+
+function renderCartModal(){
+  const rows = document.getElementById('cartRows');
+  const ids = Object.keys(cart).filter(id => cart[id].qty > 0);
+  if(ids.length === 0){
+    rows.innerHTML = '<div class="empty-note">Cart is empty.</div>';
+  }else{
+    rows.innerHTML = ids.map(id => {
+      const c = cart[id];
+      const discounted = c.originalPrice && Math.abs(c.price - c.originalPrice) > 0.001;
+      const isEditing = editingPriceId === id;
+      const priceArea = isEditing
+        ? `<div class="price-editor">
+            <label>Price ${escapeHtml(c.unit)}</label>
+            <input type="number" inputmode="decimal" class="priceInput" value="${c.price}">
+            <div class="price-editor-btns">
+              <button class="priceCancel">Cancel</button>
+              <button class="priceSave">Save price</button>
+            </div>
+          </div>`
+        : `<div class="cline">
+            ${discounted ? `<span class="strike">${PESO(c.originalPrice)}</span> ` : ''}${PESO(c.price)} ${escapeHtml(c.unit)} &times; ${fmtQty(c.qty)} = ${PESO(c.price * c.qty)}
+            <button class="editPrice">Edit price</button>
+          </div>`;
+      return `<div class="cart-row" data-id="${id}">
+        <div class="info">
+          <div class="cname">${escapeHtml(c.name)} ${discounted ? '<span class="discount-badge">Discounted</span>' : ''}</div>
+          ${priceArea}
+        </div>
+        ${isEditing ? '' : `<div class="stepper">
+          <button class="dec">-</button>
+          <span class="qv">${fmtQty(c.qty)}</span>
+          <button class="inc">+</button>
+        </div>
+        <button class="remove-x">Remove</button>`}
+      </div>`;
+    }).join('');
+    rows.querySelectorAll('.cart-row').forEach(row => {
+      const id = row.dataset.id;
+      const inc = row.querySelector('.inc');
+      const dec = row.querySelector('.dec');
+      const rem = row.querySelector('.remove-x');
+      if(inc) inc.addEventListener('click', () => { cart[id].qty += 1; renderCartModal(); renderSell(); });
+      if(dec) dec.addEventListener('click', () => {
+        cart[id].qty -= 1;
+        if(cart[id].qty <= 0) delete cart[id];
+        renderCartModal(); renderSell();
+      });
+      if(rem) rem.addEventListener('click', () => { delete cart[id]; renderCartModal(); renderSell(); });
+      const editBtn = row.querySelector('.editPrice');
+      if(editBtn) editBtn.addEventListener('click', () => { editingPriceId = id; renderCartModal(); });
+      const cancelBtn = row.querySelector('.priceCancel');
+      if(cancelBtn) cancelBtn.addEventListener('click', () => { editingPriceId = null; renderCartModal(); });
+      const saveBtn = row.querySelector('.priceSave');
+      if(saveBtn) saveBtn.addEventListener('click', () => {
+        const input = row.querySelector('.priceInput');
+        const val = parseFloat(input.value);
+        if(isNaN(val) || val < 0) return;
+        cart[id].price = val;
+        editingPriceId = null;
+        renderCartModal();
+        renderSell();
+      });
+    });
+  }
+  const {total} = cartCountAndTotal();
+  document.getElementById('modalTotal').textContent = PESO(total);
+  updateChangeLine();
+}
+let editingPriceId = null;
+
+function updateChangeLine(){
+  const {total} = cartCountAndTotal();
+  const raw = document.getElementById('cashInput').value;
+  const line = document.getElementById('changeLine');
+  const btn = document.getElementById('completeBtn');
+  if(total <= 0){
+    line.textContent = '';
+    btn.disabled = true;
+    return;
+  }
+  if(raw === ''){
+    line.textContent = 'Paid exact amount — no cash entered';
+    line.className = 'change-line';
+    btn.disabled = false;
+    return;
+  }
+  const cashVal = parseFloat(raw);
+  if(isNaN(cashVal)){
+    line.textContent = '';
+    btn.disabled = false;
+    return;
+  }
+  const change = cashVal - total;
+  if(change < 0){
+    line.textContent = 'Short by ' + PESO(Math.abs(change));
+    line.className = 'change-line negative';
+    btn.disabled = true;
+  }else{
+    line.textContent = 'Change: ' + PESO(change);
+    line.className = 'change-line positive';
+    btn.disabled = false;
+  }
+}
+
+async function completeSale(){
+  const {total} = cartCountAndTotal();
+  if(total <= 0) return;
+  const entries = Object.entries(cart).filter(([id,c]) => c.qty > 0);
+  const items = entries.map(([id,c]) => ({productId:id, name:c.name, unit:c.unit, price:c.price, originalPrice:c.originalPrice || c.price, costPrice:c.costPrice||0, qty:c.qty}));
+  const discountTotal = items.reduce((sum,i) => sum + ((i.originalPrice - i.price) * i.qty), 0);
+  const raw = document.getElementById('cashInput').value;
+  const cashVal = raw === '' ? total : (parseFloat(raw) || total);
+  const sale = {
+    id: uid(),
+    timestamp: new Date().toISOString(),
+    items,
+    total,
+    discount: discountTotal > 0.001 ? discountTotal : 0,
+    cash: cashVal,
+    change: cashVal - total
+  };
+  sales.unshift(sale);
+  await saveSales();
+  entries.forEach(([id,c]) => {
+    const p = products.find(x => x.id === id);
+    if(p) p.stock = Math.round((p.stock - c.qty) * 1000) / 1000;
+  });
+  await saveProducts();
+  cart = {};
+  sessionPrice = {};
+  closeCartModal();
+  renderSell();
+  updateTodayHeader();
+  renderHistory();
+}
+
+/* ---------- AMOUNT MODAL (buy X pesos worth) ---------- */
+let amtModalProductId = null;
+
+function openAmountModal(id){
+  const p = products.find(x => x.id === id);
+  if(!p) return;
+  amtModalProductId = id;
+  document.getElementById('amtModalTitle').textContent = 'Add ' + p.name + ' by amount';
+  document.getElementById('amtInput').value = '';
+  document.getElementById('amtError').textContent = '';
+  const quick = document.getElementById('quickAmts');
+  quick.innerHTML = [50, 100, 200, 500].map(v => `<button data-v="${v}">₱${v}</button>`).join('');
+  quick.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('amtInput').value = btn.dataset.v;
+      updateAmountPreview();
+    });
+  });
+  updateAmountPreview();
+  document.getElementById('amtModal').classList.remove('hidden');
+}
+
+function closeAmountModal(){
+  document.getElementById('amtModal').classList.add('hidden');
+  amtModalProductId = null;
+}
+
+function updateAmountPreview(){
+  const p = products.find(x => x.id === amtModalProductId);
+  const preview = document.getElementById('amtPreview');
+  const quick = document.getElementById('quickAmts');
+  const val = parseFloat(document.getElementById('amtInput').value);
+  quick.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.v === document.getElementById('amtInput').value));
+  if(!p || isNaN(val) || val <= 0){
+    preview.innerHTML = 'Enter how much the customer wants to spend.';
+    return;
+  }
+  const qty = val / curPrice(p);
+  const unitWord = p.unit.replace('per ', '');
+  preview.innerHTML = `${PESO(val)} of ${escapeHtml(p.name)} ≈ <span class="qv2">${fmtQty(qty)} ${escapeHtml(unitWord)}</span> (at ${PESO(curPrice(p))} ${escapeHtml(p.unit)})`;
+}
+
+function addByAmount(){
+  const p = products.find(x => x.id === amtModalProductId);
+  const err = document.getElementById('amtError');
+  const val = parseFloat(document.getElementById('amtInput').value);
+  if(!p) return;
+  if(isNaN(val) || val <= 0){
+    err.textContent = 'Enter a valid amount.';
+    return;
+  }
+  const qty = val / curPrice(p);
+  if(!cart[p.id]) cart[p.id] = {qty:0, price:curPrice(p), originalPrice:p.price, costPrice:p.costPrice||0, name:p.name, unit:p.unit};
+  cart[p.id].qty += qty;
+  closeAmountModal();
+  renderSell();
+  const pid = p.id;
+  showUndoToast('Added ' + PESO(val) + ' of ' + p.name, () => {
+    if(cart[pid]){
+      cart[pid].qty -= qty;
+      if(cart[pid].qty <= 0.0001) delete cart[pid];
+    }
+    renderSell();
+  });
+}
+
+/* ---------- WEIGHT MODAL (kg or grams) ---------- */
+let weightProductId = null;
+let weightUnit = 'kg';
+
+function openWeightModal(id){
+  const p = products.find(x => x.id === id);
+  if(!p) return;
+  weightProductId = id;
+  weightUnit = 'kg';
+  document.getElementById('weightModalTitle').textContent = 'Add ' + p.name + ' by weight';
+  document.getElementById('weightInput').value = '';
+  document.getElementById('weightError').textContent = '';
+  renderWeightUnit();
+  document.getElementById('weightModal').classList.remove('hidden');
+}
+
+function closeWeightModal(){
+  document.getElementById('weightModal').classList.add('hidden');
+  weightProductId = null;
+}
+
+function renderWeightUnit(){
+  document.querySelectorAll('#weightUnitToggle button').forEach(b => b.classList.toggle('active', b.dataset.u === weightUnit));
+  document.getElementById('weightLabel').textContent = weightUnit === 'kg' ? 'Weight (kg)' : 'Weight (grams)';
+  document.getElementById('weightInput').placeholder = weightUnit === 'kg' ? '0.0' : '0';
+  const quick = document.getElementById('quickWeights');
+  const opts = weightUnit === 'kg'
+    ? [{l:'¼ kg', v:0.25}, {l:'½ kg', v:0.5}, {l:'1 kg', v:1}, {l:'2 kg', v:2}]
+    : [{l:'100 g', v:100}, {l:'250 g', v:250}, {l:'500 g', v:500}, {l:'750 g', v:750}];
+  quick.innerHTML = opts.map(o => `<button data-v="${o.v}">${o.l}</button>`).join('');
+  quick.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('weightInput').value = btn.dataset.v;
+      updateWeightPreview();
+    });
+  });
+  updateWeightPreview();
+}
+
+function weightInKg(){
+  const v = parseFloat(document.getElementById('weightInput').value);
+  if(isNaN(v) || v <= 0) return null;
+  return weightUnit === 'g' ? v / 1000 : v;
+}
+
+function updateWeightPreview(){
+  const p = products.find(x => x.id === weightProductId);
+  const preview = document.getElementById('weightPreview');
+  const quick = document.getElementById('quickWeights');
+  const raw = document.getElementById('weightInput').value;
+  quick.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.v === raw));
+  const kg = weightInKg();
+  if(!p || kg === null){
+    preview.innerHTML = 'Enter the weight the customer wants.';
+    return;
+  }
+  const grams = Math.round(kg * 1000);
+  const price = curPrice(p);
+  preview.innerHTML = `<span class="qv2">${fmtQty(kg)} kg</span> (${grams} g) of ${escapeHtml(p.name)} at ${PESO(price)} per kg = <span class="qv2">${PESO(kg * price)}</span>`;
+}
+
+function addByWeight(){
+  const p = products.find(x => x.id === weightProductId);
+  const err = document.getElementById('weightError');
+  if(!p) return;
+  const kg = weightInKg();
+  if(kg === null){ err.textContent = 'Enter a valid weight.'; return; }
+  const qty = Math.round(kg * 1000) / 1000;
+  if(!cart[p.id]) cart[p.id] = {qty:0, price:curPrice(p), originalPrice:p.price, costPrice:p.costPrice||0, name:p.name, unit:p.unit};
+  cart[p.id].qty += qty;
+  closeWeightModal();
+  renderSell();
+  const pid = p.id;
+  showUndoToast('Added ' + fmtQty(qty) + ' kg of ' + p.name, () => {
+    if(cart[pid]){
+      cart[pid].qty -= qty;
+      if(cart[pid].qty <= 0.0001) delete cart[pid];
+    }
+    renderSell();
+  });
+}
+
+/* ---------- PRICE MODAL (edit price from the Sell tab) ---------- */
+let priceProductId = null;
+
+function openPriceModal(id){
+  const p = products.find(x => x.id === id);
+  if(!p) return;
+  priceProductId = id;
+  document.getElementById('priceModalTitle').textContent = 'Edit price: ' + p.name;
+  document.getElementById('priceModalLabel').textContent = 'New price ' + p.unit;
+  document.getElementById('priceModalInput').value = curPrice(p);
+  document.getElementById('priceModalError').textContent = '';
+  updatePricePreview();
+  document.getElementById('priceModal').classList.remove('hidden');
+}
+
+function closePriceModal(){
+  document.getElementById('priceModal').classList.add('hidden');
+  priceProductId = null;
+}
+
+function updatePricePreview(){
+  const p = products.find(x => x.id === priceProductId);
+  const preview = document.getElementById('pricePreview');
+  const v = parseFloat(document.getElementById('priceModalInput').value);
+  if(!p || isNaN(v) || v < 0){
+    preview.innerHTML = 'Enter the new price.';
+    return;
+  }
+  const diff = p.price - v;
+  let note = `Regular price is ${PESO(p.price)} ${escapeHtml(p.unit)}.`;
+  if(diff > 0.001) note += ` That is <span class="qv2">${PESO(diff)}</span> off.`;
+  else if(diff < -0.001) note += ` That is <span class="qv2">${PESO(-diff)}</span> above regular.`;
+  if(p.costPrice && v < p.costPrice) note += ` <span style="color:var(--red);font-weight:700;">Below your cost of ${PESO(p.costPrice)}.</span>`;
+  preview.innerHTML = note;
+}
+
+function applyPrice(permanent){
+  const p = products.find(x => x.id === priceProductId);
+  const err = document.getElementById('priceModalError');
+  const v = parseFloat(document.getElementById('priceModalInput').value);
+  if(!p) return;
+  if(isNaN(v) || v < 0){ err.textContent = 'Enter a valid price.'; return; }
+  if(permanent){
+    p.price = v;
+    delete sessionPrice[p.id];
+    if(cart[p.id]){ cart[p.id].originalPrice = v; cart[p.id].price = v; }
+    saveProducts();
+  }else{
+    sessionPrice[p.id] = v;
+    if(cart[p.id]) cart[p.id].price = v;
+  }
+  closePriceModal();
+  renderSell();
+}
+
+/* ---------- PRODUCTS TAB ---------- */
+function renderProducts(){
+  const el = document.getElementById('tab-products');
+  let html = '<button class="fab-add" id="addProductBtn">+ Add product</button>';
+  html += '<div id="productFormSlot"></div>';
+  if(products.length === 0){
+    html += '<div class="empty-note">No products yet.</div>';
+  }else{
+    html += products.map(p => `
+      <div class="prod-manage-row" data-id="${p.id}">
+        <div class="info">
+          <div class="pname2">${escapeHtml(p.name)}</div>
+          <div class="pmeta2">Sell ${PESO(p.price)} · Cost ${PESO(p.costPrice)} ${escapeHtml(p.unit)} · Stock ${fmtQty(p.stock)}</div>
+        </div>
+        <button class="icon-btn edit">Edit</button>
+        <button class="icon-btn del">Delete</button>
+      </div>`).join('');
+  }
+  el.innerHTML = html;
+
+  document.getElementById('addProductBtn').addEventListener('click', () => {
+    editingProductId = null;
+    showProductForm();
+  });
+  el.querySelectorAll('.prod-manage-row').forEach(row => {
+    const id = row.dataset.id;
+    row.querySelector('.edit').addEventListener('click', () => {
+      editingProductId = id;
+      showProductForm();
+    });
+    row.querySelector('.del').addEventListener('click', async () => {
+      products = products.filter(p => p.id !== id);
+      delete cart[id];
+      await saveProducts();
+      renderProducts();
+      renderSell();
+    });
+  });
+}
+
+function showProductForm(){
+  const slot = document.getElementById('productFormSlot');
+  const editing = editingProductId ? products.find(p => p.id === editingProductId) : null;
+  slot.innerHTML = `
+    <div class="add-form">
+      <h3>${editing ? 'Edit product' : 'New product'}</h3>
+      <label>Name</label>
+      <input type="text" id="fName" placeholder="e.g. Large shrimp" value="${editing ? escapeHtml(editing.name) : ''}">
+      <label>Selling price</label>
+      <input type="number" id="fPrice" inputmode="decimal" placeholder="0.00" value="${editing ? editing.price : ''}">
+      <label>Cost price (what you pay for it)</label>
+      <input type="number" id="fCost" inputmode="decimal" placeholder="0.00" value="${editing ? editing.costPrice : ''}">
+      <label>Unit</label>
+      <select id="fUnit">
+        ${['per kg','per tray','per piece','per pack','per order'].map(u =>
+          `<option value="${u}" ${editing && editing.unit === u ? 'selected' : ''}>${u}</option>`).join('')}
+      </select>
+      <label>${editing ? 'Current stock on hand' : 'Starting stock'}</label>
+      <input type="number" id="fStock" inputmode="decimal" placeholder="0" value="${editing ? editing.stock : ''}">
+      <label>Low stock alert level</label>
+      <input type="number" id="fLowStock" inputmode="decimal" placeholder="2" value="${editing ? editing.lowStock : '2'}">
+      <div id="formError" style="color:var(--red);font-size:12px;margin-top:8px;"></div>
+      <div class="form-btn-row">
+        <button class="cancel" id="cancelForm">Cancel</button>
+        <button class="save" id="saveForm">${editing ? 'Save changes' : 'Add product'}</button>
+      </div>
+    </div>`;
+  document.getElementById('cancelForm').addEventListener('click', () => { editingProductId = null; slot.innerHTML = ''; });
+  document.getElementById('saveForm').addEventListener('click', async () => {
+    const name = document.getElementById('fName').value.trim();
+    const price = parseFloat(document.getElementById('fPrice').value);
+    const cost = parseFloat(document.getElementById('fCost').value);
+    const unit = document.getElementById('fUnit').value;
+    const stock = parseFloat(document.getElementById('fStock').value);
+    const lowStock = parseFloat(document.getElementById('fLowStock').value);
+    const err = document.getElementById('formError');
+    if(!name){ err.textContent = 'Enter a product name.'; return; }
+    if(isNaN(price) || price <= 0){ err.textContent = 'Enter a valid selling price.'; return; }
+    const finalCost = isNaN(cost) || cost < 0 ? 0 : cost;
+    const finalStock = isNaN(stock) || stock < 0 ? 0 : stock;
+    const finalLowStock = isNaN(lowStock) || lowStock < 0 ? 2 : lowStock;
+    if(editing){
+      editing.name = name; editing.price = price; editing.unit = unit;
+      editing.costPrice = finalCost; editing.stock = finalStock; editing.lowStock = finalLowStock;
+    }else{
+      products.push({id: uid(), name, price, unit, costPrice: finalCost, stock: finalStock, lowStock: finalLowStock});
+    }
+    await saveProducts();
+    editingProductId = null;
+    renderProducts();
+    renderSell();
+  });
+}
+
+/* ---------- INVENTORY TAB ---------- */
+function computeFinancials(){
+  const capitalInStock = products.reduce((sum,p) => sum + (p.stock * p.costPrice), 0);
+  const totalInvested = purchases.reduce((sum,pu) => sum + pu.totalCost, 0);
+  const grossRevenue = sales.reduce((sum,s) => sum + s.total, 0);
+  const cogs = sales.reduce((sum,s) => sum + s.items.reduce((a,i) => a + (i.costPrice||0) * i.qty, 0), 0);
+  const grossProfit = grossRevenue - cogs;
+  const netIncome = grossProfit;
+  const roi = totalInvested > 0 ? (netIncome / totalInvested) * 100 : null;
+  return {capitalInStock, totalInvested, grossRevenue, cogs, grossProfit, netIncome, roi};
+}
+
+function renderInventory(){
+  const el = document.getElementById('tab-inventory');
+  const f = computeFinancials();
+  let html = `<div class="fin-grid">
+    <div class="fin-card"><div class="fl">Stock value (capital tied up)</div><div class="fv">${PESO(f.capitalInStock)}</div></div>
+    <div class="fin-card"><div class="fl">Total invested (all-time)</div><div class="fv">${PESO(f.totalInvested)}</div></div>
+    <div class="fin-card accent"><div class="fl">Total sales (gross revenue)</div><div class="fv">${PESO(f.grossRevenue)}</div></div>
+    <div class="fin-card"><div class="fl">Cost of goods sold</div><div class="fv">${PESO(f.cogs)}</div></div>
+    <div class="fin-card ${f.grossProfit >= 0 ? 'positive' : 'negative'}"><div class="fl">Net income</div><div class="fv">${PESO(f.netIncome)}</div></div>
+    <div class="fin-card ${f.roi === null ? '' : (f.roi >= 0 ? 'positive' : 'negative')}"><div class="fl">ROI</div><div class="fv">${f.roi === null ? '—' : f.roi.toFixed(1) + '%'}</div></div>
+  </div>
+  <div class="fin-note">Stock value is what your unsold inventory cost you. Net income is sales minus the cost of what you sold (it doesn't include other expenses like ice, transport, or rent). ROI compares net income to everything you've spent restocking so far.</div>
+  <div class="section-label">Product stock</div>`;
+
+  if(products.length === 0){
+    html += '<div class="empty-note">No products yet. Add some in the Products tab.</div>';
+  }else{
+    html += products.map(p => {
+      const low = p.stock <= p.lowStock && p.stock > 0;
+      const out = p.stock <= 0;
+      return `<div class="stock-row ${low || out ? 'low-flag' : ''}" data-id="${p.id}">
+        <div class="info">
+          <div class="sname">${escapeHtml(p.name)} ${out ? '<span class="out-badge">Out of stock</span>' : (low ? '<span class="low-badge">Low stock</span>' : '')}</div>
+          <div class="smeta">${fmtQty(p.stock)} ${escapeHtml(p.unit.replace('per ',''))} on hand · worth ${PESO(p.stock * p.costPrice)} · cost ${PESO(p.costPrice)} ${escapeHtml(p.unit)}</div>
+        </div>
+        <button class="restock-btn" data-id="${p.id}">Restock</button>
+      </div>`;
+    }).join('');
+  }
+  el.innerHTML = html;
+
+  el.querySelectorAll('.restock-btn').forEach(btn => {
+    btn.addEventListener('click', () => openRestockModal(btn.dataset.id));
+  });
+}
+
+let restockProductId = null;
+
+function openRestockModal(id){
+  const p = products.find(x => x.id === id);
+  if(!p) return;
+  restockProductId = id;
+  document.getElementById('restockModalTitle').textContent = 'Restock ' + p.name;
+  document.getElementById('restockQty').value = '';
+  document.getElementById('restockCost').value = p.costPrice || '';
+  document.getElementById('restockError').textContent = '';
+  updateRestockPreview();
+  document.getElementById('restockModal').classList.remove('hidden');
+}
+
+function closeRestockModal(){
+  document.getElementById('restockModal').classList.add('hidden');
+  restockProductId = null;
+}
+
+function updateRestockPreview(){
+  const p = products.find(x => x.id === restockProductId);
+  const preview = document.getElementById('restockPreview');
+  const qty = parseFloat(document.getElementById('restockQty').value);
+  const cost = parseFloat(document.getElementById('restockCost').value);
+  if(!p || isNaN(qty) || qty <= 0 || isNaN(cost) || cost < 0){
+    preview.innerHTML = 'Enter how much you bought and what you paid per unit.';
+    return;
+  }
+  const newStock = p.stock + qty;
+  preview.innerHTML = `Total cost: <span class="qv2">${PESO(qty * cost)}</span> · new stock: <span class="qv2">${fmtQty(newStock)}</span> ${escapeHtml(p.unit.replace('per ',''))}`;
+}
+
+async function submitRestock(){
+  const p = products.find(x => x.id === restockProductId);
+  const err = document.getElementById('restockError');
+  const qty = parseFloat(document.getElementById('restockQty').value);
+  const cost = parseFloat(document.getElementById('restockCost').value);
+  if(!p) return;
+  if(isNaN(qty) || qty <= 0){ err.textContent = 'Enter a valid quantity.'; return; }
+  if(isNaN(cost) || cost < 0){ err.textContent = 'Enter a valid cost.'; return; }
+  p.stock = Math.round((p.stock + qty) * 1000) / 1000;
+  p.costPrice = cost;
+  purchases.unshift({
+    id: uid(),
+    timestamp: new Date().toISOString(),
+    productId: p.id,
+    productName: p.name,
+    qty,
+    costPerUnit: cost,
+    totalCost: qty * cost
+  });
+  await saveProducts();
+  await savePurchases();
+  closeRestockModal();
+  renderInventory();
+  renderSell();
+}
+
+/* ---------- HISTORY TAB ---------- */
+function renderHistory(){
+  const el = document.getElementById('tab-history');
+  const today = new Date().toDateString();
+  const todaySales = sales.filter(s => new Date(s.timestamp).toDateString() === today);
+  const todaySum = todaySales.reduce((a,s) => a + s.total, 0);
+  const allSum = sales.reduce((a,s) => a + s.total, 0);
+  const todayDiscount = todaySales.reduce((a,s) => a + (s.discount || 0), 0);
+
+  let html = `<div class="hist-summary">
+    <div class="hist-stat"><div class="n">${PESO(todaySum)}</div><div class="l">today (${todaySales.length} sales)</div></div>
+    <div class="hist-stat"><div class="n">${PESO(allSum)}</div><div class="l">all time (${sales.length} sales)</div></div>
+  </div>`;
+  if(todayDiscount > 0){
+    html += `<div style="font-size:12px;color:var(--ink-soft);margin:-6px 0 14px 2px;">${PESO(todayDiscount)} given in discounts today</div>`;
+  }
+
+  if(sales.length === 0){
+    html += '<div class="empty-note">No sales recorded yet.</div>';
+  }else{
+    html += sales.map(s => {
+      const t = new Date(s.timestamp);
+      const timeStr = t.toLocaleDateString('en-PH', {month:'short', day:'numeric'}) + ' · ' + t.toLocaleTimeString('en-PH', {hour:'numeric', minute:'2-digit'});
+      const itemsStr = s.items.map(i => {
+        const wasDiscounted = i.originalPrice && Math.abs(i.originalPrice - i.price) > 0.001;
+        return `${i.name} x${fmtQty(i.qty)}` + (wasDiscounted ? ` (discounted to ${PESO(i.price)})` : '');
+      }).join(', ');
+      return `<div class="sale-card">
+        <div class="sale-top">
+          <span class="sale-time">${timeStr}</span>
+          <span class="sale-total">${PESO(s.total)}</span>
+        </div>
+        <div class="sale-items">${escapeHtml(itemsStr)}</div>
+        ${s.discount ? `<div style="font-size:11px;color:var(--coral-dark);margin-top:4px;font-weight:700;">Discount given: ${PESO(s.discount)}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+  html += backupCardHtml();
+  el.innerHTML = html;
+  bindBackupHandlers(el);
+}
+
+/* ---------- BACKUP AND RESTORE ---------- */
+let lastBackup = null;
+let pendingRestore = null;
+
+function backupCardHtml(){
+  let status = 'You have not saved a backup yet.';
+  let stale = true;
+  if(lastBackup){
+    const d = new Date(lastBackup);
+    const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+    status = 'Last backup: ' + d.toLocaleDateString('en-PH',{month:'short',day:'numeric'}) + ' at ' + d.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'});
+    stale = days >= 7;
+  }
+  let restoreArea = '';
+  if(pendingRestore){
+    const b = pendingRestore;
+    const when = b.exportedAt ? new Date(b.exportedAt).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}) : 'unknown date';
+    restoreArea = `<div class="highlight-line" style="margin-top:10px;">Backup from ${when}: ${b.sales.length} sales, ${b.products.length} products.<br>Restoring replaces everything currently in the app.</div>
+      <div class="two-btns" style="margin-top:8px;">
+        <button class="secondary" id="restoreCancel">Cancel</button>
+        <button class="primary" id="restoreConfirm">Replace my data</button>
+      </div>`;
+  }
+  return `<div class="t-card" style="margin-top:18px;">
+    <h3>Backup and restore</h3>
+    <div class="t-sub" style="${stale ? 'color:var(--red);font-weight:700;' : ''}">${status}</div>
+    <div class="t-sub">Save a backup file now and then. If the app is ever reinstalled or its data is cleared, you can restore everything from it.</div>
+    <div class="two-btns" style="margin-top:8px;">
+      <button class="primary" id="backupDownload">Save backup</button>
+      <button class="secondary" id="backupRestorePick">Restore backup</button>
+    </div>
+    <input type="file" id="backupFile" accept=".json,application/json" style="display:none;">
+    <div id="backupMsg" style="font-size:12px;margin-top:8px;color:var(--ink-soft);"></div>
+    ${restoreArea}
+  </div>`;
+}
+
+function bindBackupHandlers(el){
+  const msg = el.querySelector('#backupMsg');
+  el.querySelector('#backupDownload').addEventListener('click', async () => {
+    const data = {app:'shrimp-pos', version:1, exportedAt:new Date().toISOString(), products, sales, purchases};
+    const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'shrimp-pos-backup-' + dkey(new Date()) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+    lastBackup = data.exportedAt;
+    try{ await window.storage.set('last-backup', lastBackup); }catch(e){}
+    renderHistory();
+    const m = document.getElementById('backupMsg');
+    if(m) m.textContent = 'Backup saved to your Downloads folder.';
+  });
+  const fileInput = el.querySelector('#backupFile');
+  el.querySelector('#backupRestorePick').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    const f = fileInput.files && fileInput.files[0];
+    if(!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try{
+        const d = JSON.parse(reader.result);
+        if(!d || !Array.isArray(d.products) || !Array.isArray(d.sales)) throw new Error('bad');
+        d.purchases = Array.isArray(d.purchases) ? d.purchases : [];
+        pendingRestore = d;
+        renderHistory();
+      }catch(e){
+        msg.style.color = 'var(--red)';
+        msg.textContent = 'That file is not a Shrimp POS backup.';
+      }
+    };
+    reader.readAsText(f);
+  });
+  const cancel = el.querySelector('#restoreCancel');
+  if(cancel) cancel.addEventListener('click', () => { pendingRestore = null; renderHistory(); });
+  const confirmBtn = el.querySelector('#restoreConfirm');
+  if(confirmBtn) confirmBtn.addEventListener('click', async () => {
+    products = pendingRestore.products;
+    sales = pendingRestore.sales;
+    purchases = pendingRestore.purchases;
+    products.forEach(p => {
+      if(typeof p.costPrice !== 'number') p.costPrice = 0;
+      if(typeof p.stock !== 'number') p.stock = 0;
+      if(typeof p.lowStock !== 'number') p.lowStock = 1;
+    });
+    pendingRestore = null;
+    cart = {};
+    await saveProducts(); await saveSales(); await savePurchases();
+    renderSell(); updateTodayHeader(); renderHistory();
+    const m = document.getElementById('backupMsg');
+    if(m) m.textContent = 'Backup restored.';
+  });
+}
+
+/* ---------- TRENDS TAB ---------- */
+let trendRange = 7;
+let calMonth = null;
+let calSelected = null;
+
+const DOW_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function dkey(d){
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function shortPeso(v){
+  if(v >= 1000) return '₱' + (v/1000).toFixed(v >= 10000 ? 0 : 1).replace(/\.0$/,'') + 'k';
+  return '₱' + Math.round(v);
+}
+function hourLabel(h){
+  return (h % 12 === 0 ? 12 : h % 12) + ' ' + (h >= 12 ? 'PM' : 'AM');
+}
+function startOfDay(d){ const x = new Date(d); x.setHours(0,0,0,0); return x; }
+function addDays(d, n){ const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+
+function salesByDay(){
+  const m = {};
+  sales.forEach(s => {
+    const k = dkey(new Date(s.timestamp));
+    if(!m[k]) m[k] = {total:0, count:0, list:[]};
+    m[k].total += s.total;
+    m[k].count += 1;
+    m[k].list.push(s);
+  });
+  return m;
+}
+
+function salesInRange(start, endExclusive){
+  return sales.filter(s => {
+    const t = new Date(s.timestamp);
+    return t >= start && t < endExclusive;
+  });
+}
+
+function renderTrends(){
+  const el = document.getElementById('tab-trends');
+  if(!calMonth){ const n = new Date(); calMonth = new Date(n.getFullYear(), n.getMonth(), 1); }
+  const today = startOfDay(new Date());
+  const byDay = salesByDay();
+
+  const rangeStart = addDays(today, -(trendRange - 1));
+  const rangeEnd = addDays(today, 1);
+  const prevStart = addDays(rangeStart, -trendRange);
+  const inRange = salesInRange(rangeStart, rangeEnd);
+  const inPrev = salesInRange(prevStart, rangeStart);
+  const rangeTotal = inRange.reduce((a,s) => a + s.total, 0);
+  const prevTotal = inPrev.reduce((a,s) => a + s.total, 0);
+
+  const days = [];
+  for(let i = 0; i < trendRange; i++){
+    const d = addDays(rangeStart, i);
+    const rec = byDay[dkey(d)];
+    days.push({date:d, total: rec ? rec.total : 0});
+  }
+  const maxDay = Math.max(...days.map(d => d.total), 0);
+  const bestDay = days.reduce((b,d) => d.total > b.total ? d : b, days[0]);
+
+  let deltaHtml = '';
+  if(prevTotal > 0){
+    const pct = ((rangeTotal - prevTotal) / prevTotal) * 100;
+    deltaHtml = `<span class="${pct >= 0 ? 'delta-up' : 'delta-down'}">${pct >= 0 ? '▲' : '▼'} ${Math.abs(pct).toFixed(0)}%</span> vs the previous ${trendRange} days (${PESO(prevTotal)})`;
+  }else{
+    deltaHtml = `No sales in the previous ${trendRange} days to compare with.`;
+  }
+
+  let html = `<div class="range-toggle">
+    <button data-range="7" class="${trendRange === 7 ? 'active' : ''}">Last 7 days</button>
+    <button data-range="30" class="${trendRange === 30 ? 'active' : ''}">Last 30 days</button>
+  </div>`;
+
+  html += `<div class="hist-summary">
+    <div class="hist-stat"><div class="n">${PESO(rangeTotal)}</div><div class="l">sales (${inRange.length} orders)</div></div>
+    <div class="hist-stat"><div class="n">${PESO(rangeTotal / trendRange)}</div><div class="l">average per day</div></div>
+  </div>
+  <div class="highlight-line">${deltaHtml}${maxDay > 0 ? `<br>Best day: <b>${DOW_SHORT[bestDay.date.getDay()]}, ${bestDay.date.toLocaleDateString('en-PH',{month:'short',day:'numeric'})}</b> with ${PESO(bestDay.total)}.` : ''}</div>`;
+
+  /* daily bar chart */
+  html += `<div class="t-card"><h3>Daily sales</h3>`;
+  if(rangeTotal === 0){
+    html += `<div class="empty-note" style="padding:20px;">No sales in this period yet.</div>`;
+  }else{
+    html += `<div class="bars">` + days.map(d => {
+      const h = maxDay > 0 ? Math.max(Math.round((d.total / maxDay) * 118), d.total > 0 ? 4 : 2) : 2;
+      const cls = d.total === 0 ? 'zero' : (d.total === maxDay ? 'best' : '');
+      return `<div class="bar-col" title="${dkey(d.date)}: ${PESO(d.total)}"><div class="bar ${cls}" style="height:${h}px"></div></div>`;
+    }).join('') + `</div><div class="bar-lbls">` + days.map((d,i) => {
+      if(trendRange === 7) return `<span>${DOW_SHORT[d.date.getDay()].slice(0,2)}<br>${d.date.getDate()}</span>`;
+      return `<span>${i % 5 === 0 || i === days.length - 1 ? d.date.getDate() : ''}</span>`;
+    }).join('') + `</div>`;
+    html += `<div class="t-sub" style="margin:8px 0 0 0;">Dark bar is your best day. Tap a day in the calendar below to see its orders.</div>`;
+  }
+  html += `</div>`;
+
+  /* calendar */
+  const y = calMonth.getFullYear(), mo = calMonth.getMonth();
+  const firstDow = new Date(y, mo, 1).getDay();
+  const dim = new Date(y, mo + 1, 0).getDate();
+  let monthMax = 0, monthTotal = 0;
+  for(let d = 1; d <= dim; d++){
+    const rec = byDay[dkey(new Date(y, mo, d))];
+    if(rec){ monthMax = Math.max(monthMax, rec.total); monthTotal += rec.total; }
+  }
+  const nowMonth = new Date();
+  const atCurrentMonth = (y === nowMonth.getFullYear() && mo === nowMonth.getMonth());
+  html += `<div class="t-card"><div class="cal-head">
+    <button data-cal="-1" aria-label="Previous month">&lsaquo;</button>
+    <div style="text-align:center;"><div class="mname">${calMonth.toLocaleDateString('en-PH',{month:'long',year:'numeric'})}</div>
+    <div style="font-size:12px;color:var(--ink-soft);">${PESO(monthTotal)} this month</div></div>
+    <button data-cal="1" aria-label="Next month" ${atCurrentMonth ? 'style="opacity:.35"' : ''}>&rsaquo;</button>
+  </div><div class="cal-grid">`;
+  DOW_SHORT.forEach(n => { html += `<div class="cal-dow">${n.slice(0,1)}</div>`; });
+  for(let i = 0; i < firstDow; i++) html += `<div class="cal-cell empty"></div>`;
+  for(let d = 1; d <= dim; d++){
+    const dt = new Date(y, mo, d);
+    const k = dkey(dt);
+    const rec = byDay[k];
+    let style = '';
+    if(rec && monthMax > 0){
+      const inten = rec.total / monthMax;
+      const alpha = 0.15 + 0.75 * inten;
+      style = `background:rgba(232,115,74,${alpha.toFixed(2)});border-color:rgba(232,115,74,${alpha.toFixed(2)});${inten > 0.6 ? 'color:#fff;' : ''}`;
+    }
+    const cls = ['cal-cell'];
+    if(dkey(today) === k) cls.push('today');
+    if(calSelected === k) cls.push('sel');
+    html += `<div class="${cls.join(' ')}" data-day="${k}" style="${style}"><span class="dn">${d}</span><span class="da">${rec ? shortPeso(rec.total) : ''}</span></div>`;
+  }
+  html += `</div><div class="cal-legend">Less <i style="background:rgba(232,115,74,.2)"></i><i style="background:rgba(232,115,74,.5)"></i><i style="background:rgba(232,115,74,.9)"></i> More sales</div>`;
+
+  if(calSelected){
+    const rec = byDay[calSelected];
+    const parts = calSelected.split('-').map(Number);
+    const dd = new Date(parts[0], parts[1]-1, parts[2]);
+    html += `<div class="day-detail"><div class="dd-title">${dd.toLocaleDateString('en-PH',{weekday:'long',month:'long',day:'numeric'})}</div>`;
+    if(!rec){
+      html += `<div class="t-sub" style="margin:0;">No sales on this day.</div>`;
+    }else{
+      html += `<div class="t-sub" style="margin:0 0 6px 0;">${PESO(rec.total)} from ${rec.count} ${rec.count === 1 ? 'order' : 'orders'}</div>`;
+      html += rec.list.slice().sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp)).map(s => {
+        const t = new Date(s.timestamp).toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'});
+        const items = s.items.map(i => `${i.name} x${fmtQty(i.qty)}`).join(', ');
+        return `<div class="day-sale"><span>${t}</span><span class="ds-items">${escapeHtml(items)}</span><span class="ds-amt">${PESO(s.total)}</span></div>`;
+      }).join('');
+    }
+    html += `</div>`;
+  }
+  html += `</div>`;
+
+  /* busiest hours */
+  html += `<div class="t-card"><h3>Busiest hours</h3><div class="t-sub">Sales by time of day, ${trendRange === 7 ? 'last 7 days' : 'last 30 days'}.</div>`;
+  const hours = new Array(24).fill(0);
+  inRange.forEach(s => { hours[new Date(s.timestamp).getHours()] += s.total; });
+  const hMax = Math.max(...hours);
+  if(hMax <= 0){
+    html += `<div class="t-sub" style="margin:0;">No sales yet in this period.</div>`;
+  }else{
+    const active = hours.map((v,h) => v > 0 ? h : -1).filter(h => h >= 0);
+    const from = Math.min(...active), to = Math.max(...active);
+    const bestH = hours.indexOf(hMax);
+    html += `<div class="highlight-line">Your best hour is <b>${hourLabel(bestH)}</b> with ${PESO(hMax)}.</div>`;
+    for(let h = from; h <= to; h++){
+      const w = Math.round((hours[h] / hMax) * 100);
+      html += `<div class="h-row"><span class="hl">${hourLabel(h)}</span><div class="hb"><div class="${h === bestH ? 'best' : ''}" style="width:${w}%"></div></div><span class="hv">${hours[h] > 0 ? PESO(hours[h]) : '-'}</span></div>`;
+    }
+  }
+  html += `</div>`;
+
+  /* day of week */
+  html += `<div class="t-card"><h3>Best days of the week</h3><div class="t-sub">Average sales per day, ${trendRange === 7 ? 'last 7 days' : 'last 30 days'}.</div>`;
+  const dowTotal = new Array(7).fill(0), dowDays = new Array(7).fill(0);
+  days.forEach(d => { dowTotal[d.date.getDay()] += d.total; dowDays[d.date.getDay()] += 1; });
+  const dowAvg = dowTotal.map((t,i) => dowDays[i] > 0 ? t / dowDays[i] : null);
+  const dowMax = Math.max(...dowAvg.map(v => v || 0));
+  if(dowMax <= 0){
+    html += `<div class="t-sub" style="margin:0;">No sales yet in this period.</div>`;
+  }else{
+    const order = [1,2,3,4,5,6,0];
+    const bestD = dowAvg.indexOf(dowMax);
+    html += `<div class="highlight-line">${DOW_SHORT[bestD]} is your strongest day, averaging ${PESO(dowMax)}.</div>`;
+    order.forEach(i => {
+      if(dowAvg[i] === null) return;
+      const w = Math.round((dowAvg[i] / dowMax) * 100);
+      html += `<div class="h-row"><span class="hl">${DOW_SHORT[i]}</span><div class="hb"><div class="${i === bestD ? 'best' : ''}" style="width:${w}%"></div></div><span class="hv">${PESO(dowAvg[i])}</span></div>`;
+    });
+  }
+  html += `</div>`;
+
+  /* products */
+  const agg = {};
+  products.forEach(p => { agg[p.name] = {name:p.name, unit:p.unit, qty:0, rev:0}; });
+  inRange.forEach(s => s.items.forEach(i => {
+    if(!agg[i.name]) agg[i.name] = {name:i.name, unit:i.unit, qty:0, rev:0};
+    agg[i.name].qty += i.qty;
+    agg[i.name].rev += i.price * i.qty;
+  }));
+  const list = Object.values(agg).sort((a,b) => b.rev - a.rev);
+  html += `<div class="t-card"><h3>Best and slowest products</h3><div class="t-sub">Ranked by sales, ${trendRange === 7 ? 'last 7 days' : 'last 30 days'}.</div>`;
+  if(list.length === 0 || list[0].rev <= 0){
+    html += `<div class="t-sub" style="margin:0;">No product sales yet in this period.</div>`;
+  }else{
+    const top = list[0].rev;
+    list.forEach((p, idx) => {
+      const w = Math.round((p.rev / top) * 100);
+      const slow = idx >= list.length - 2 && list.length > 3 && idx > 0;
+      html += `<div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">
+          <span>${escapeHtml(p.name)}${p.rev === 0 ? '<span class="slow-tag">No sales</span>' : (slow ? '<span class="slow-tag">Slow</span>' : '')}</span>
+          <span style="font-variant-numeric:tabular-nums;">${PESO(p.rev)}</span>
+        </div>
+        <div class="hb" style="background:var(--sand);border-radius:5px;height:10px;overflow:hidden;margin-top:4px;"><div style="height:100%;width:${w}%;background:${idx === 0 ? 'var(--teal)' : 'var(--coral)'};border-radius:5px;"></div></div>
+        <div style="font-size:11px;color:var(--ink-soft);margin-top:2px;">${fmtQty(p.qty)} ${escapeHtml(p.unit.replace('per ',''))} sold</div>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+
+  el.innerHTML = html;
+
+  el.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', () => {
+    trendRange = parseInt(b.dataset.range, 10);
+    renderTrends();
+  }));
+  el.querySelectorAll('[data-cal]').forEach(b => b.addEventListener('click', () => {
+    const dir = parseInt(b.dataset.cal, 10);
+    const next = new Date(calMonth.getFullYear(), calMonth.getMonth() + dir, 1);
+    const n = new Date();
+    if(next > new Date(n.getFullYear(), n.getMonth(), 1)) return;
+    calMonth = next;
+    calSelected = null;
+    renderTrends();
+  }));
+  el.querySelectorAll('[data-day]').forEach(c => c.addEventListener('click', () => {
+    calSelected = (calSelected === c.dataset.day) ? null : c.dataset.day;
+    renderTrends();
+  }));
+}
+
+/* ---------- TAB SWITCHING ---------- */
+function switchTab(name){
+  hideUndoToast();
+  clearTimeout(clearPendingTimer);
+  resetClearButtons();
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.getElementById('tab-sell').style.display = name === 'sell' ? 'block' : 'none';
+  document.getElementById('tab-products').style.display = name === 'products' ? 'block' : 'none';
+  document.getElementById('tab-inventory').style.display = name === 'inventory' ? 'block' : 'none';
+  document.getElementById('tab-history').style.display = name === 'history' ? 'block' : 'none';
+  document.getElementById('tab-trends').style.display = name === 'trends' ? 'block' : 'none';
+  if(name === 'trends') renderTrends();
+  if(name === 'products') renderProducts();
+  if(name === 'inventory') renderInventory();
+  if(name === 'history') renderHistory();
+}
+
+/* ---------- INIT ---------- */
+async function init(){
+  setTodayDate();
+  document.getElementById('tab-sell').innerHTML = '<div class="loading">Loading your shop...</div>';
+  await loadData();
+  renderSell();
+  updateTodayHeader();
+
+  document.querySelectorAll('nav button').forEach(b => {
+    b.addEventListener('click', () => switchTab(b.dataset.tab));
+  });
+  document.getElementById('viewCartBtn').addEventListener('click', openCartModal);
+  document.getElementById('clearCartBtn').addEventListener('click', clearCart);
+  document.getElementById('clearCartBtnModal').addEventListener('click', clearCart);
+  document.getElementById('closeCart').addEventListener('click', closeCartModal);
+  document.getElementById('cartModal').addEventListener('click', (e) => {
+    if(e.target.id === 'cartModal') closeCartModal();
+  });
+  document.getElementById('cashInput').addEventListener('input', updateChangeLine);
+  document.getElementById('completeBtn').addEventListener('click', completeSale);
+
+  document.getElementById('closeAmt').addEventListener('click', closeAmountModal);
+  document.getElementById('amtModal').addEventListener('click', (e) => {
+    if(e.target.id === 'amtModal') closeAmountModal();
+  });
+  document.getElementById('amtInput').addEventListener('input', updateAmountPreview);
+  document.getElementById('amtAddBtn').addEventListener('click', addByAmount);
+
+  document.getElementById('closeWeight').addEventListener('click', closeWeightModal);
+  document.getElementById('weightModal').addEventListener('click', (e) => {
+    if(e.target.id === 'weightModal') closeWeightModal();
+  });
+  document.querySelectorAll('#weightUnitToggle button').forEach(b => {
+    b.addEventListener('click', () => {
+      weightUnit = b.dataset.u;
+      document.getElementById('weightInput').value = '';
+      renderWeightUnit();
+    });
+  });
+  document.getElementById('weightInput').addEventListener('input', updateWeightPreview);
+  document.getElementById('weightAddBtn').addEventListener('click', addByWeight);
+
+  document.getElementById('closePrice').addEventListener('click', closePriceModal);
+  document.getElementById('priceModal').addEventListener('click', (e) => {
+    if(e.target.id === 'priceModal') closePriceModal();
+  });
+  document.getElementById('priceModalInput').addEventListener('input', updatePricePreview);
+  document.getElementById('priceThisSale').addEventListener('click', () => applyPrice(false));
+  document.getElementById('priceSaveNew').addEventListener('click', () => applyPrice(true));
+
+  document.getElementById('closeRestock').addEventListener('click', closeRestockModal);
+  document.getElementById('restockModal').addEventListener('click', (e) => {
+    if(e.target.id === 'restockModal') closeRestockModal();
+  });
+  document.getElementById('restockQty').addEventListener('input', updateRestockPreview);
+  document.getElementById('restockCost').addEventListener('input', updateRestockPreview);
+  document.getElementById('restockAddBtn').addEventListener('click', submitRestock);
+}
+
+init();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+</script>
+</body>
+</html>
