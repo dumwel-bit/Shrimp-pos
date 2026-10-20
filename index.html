@@ -324,6 +324,36 @@
     padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;
   }
 
+  /* Tutorial */
+  .help-btn{
+    width:32px;height:32px;border-radius:16px;border:1.5px solid rgba(255,255,255,0.55);
+    background:transparent;color:#fff;font-size:16px;font-weight:700;cursor:pointer;flex-shrink:0;
+  }
+  #tour.hidden{display:none;}
+  #tourBlock{position:fixed;inset:0;z-index:70;background:rgba(10,43,44,0.6);}
+  #tourBlock.clear{background:transparent;}
+  #tourRing{
+    position:fixed;z-index:71;border-radius:12px;pointer-events:none;display:none;
+    box-shadow:0 0 0 9999px rgba(10,43,44,0.6);outline:3px solid var(--coral);
+  }
+  #tourCard{
+    position:fixed;left:12px;right:12px;max-width:520px;margin:0 auto;z-index:72;
+    background:var(--card);border-radius:16px;padding:16px 16px 14px 16px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.3);
+  }
+  #tourCard .tc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  #tourCard .tc-step{font-size:12px;color:var(--ink-soft);font-weight:700;}
+  #tourCard .tc-skip{background:none;border:none;color:var(--ink-soft);font-size:12px;font-weight:700;cursor:pointer;padding:4px 0;}
+  #tourCard h3{margin:0 0 6px 0;font-size:17px;}
+  #tourCard p{margin:0;font-size:14px;line-height:1.5;color:var(--ink);}
+  #tourCard .tc-dots{display:flex;gap:5px;margin:12px 0;}
+  #tourCard .tc-dots i{width:7px;height:7px;border-radius:4px;background:var(--line);display:block;}
+  #tourCard .tc-dots i.on{background:var(--coral);width:18px;}
+  #tourCard .tc-btns{display:flex;gap:8px;}
+  #tourCard .tc-btns button{flex:1;padding:13px 8px;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;border:none;}
+  #tourCard .tc-back{background:#fff;border:1px solid var(--line) !important;color:var(--ink-soft);}
+  #tourCard .tc-next{background:var(--coral);color:#fff;flex:2 !important;}
+
   /* Trends tab */
   .range-toggle{display:flex;gap:8px;margin-bottom:12px;}
   .range-toggle button{
@@ -386,9 +416,12 @@
       <div class="brand-name">🦐 Shrimp Stall</div>
       <div class="brand-sub" id="todayDate">-</div>
     </div>
-    <div class="today-stat">
-      <div class="num" id="todayTotal">₱0</div>
-      <div class="label">today's sales</div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="today-stat">
+        <div class="num" id="todayTotal">₱0</div>
+        <div class="label">today's sales</div>
+      </div>
+      <button id="helpBtn" class="help-btn" aria-label="Show the tutorial">?</button>
     </div>
   </div>
   <nav>
@@ -518,6 +551,18 @@
     <div class="amt-preview" id="restockPreview"></div>
     <div id="restockError" style="color:var(--red);font-size:12px;margin-top:8px;"></div>
     <button class="complete-btn" id="restockAddBtn">Add to stock</button>
+  </div>
+</div>
+
+<div id="tour" class="hidden">
+  <div id="tourBlock"></div>
+  <div id="tourRing"></div>
+  <div id="tourCard" role="dialog" aria-live="polite">
+    <div class="tc-top"><span class="tc-step" id="tcStep"></span><button class="tc-skip" id="tcSkip">Skip tour</button></div>
+    <h3 id="tcTitle"></h3>
+    <p id="tcBody"></p>
+    <div class="tc-dots" id="tcDots"></div>
+    <div class="tc-btns"><button class="tc-back" id="tcBack">Back</button><button class="tc-next" id="tcNext">Next</button></div>
   </div>
 </div>
 
@@ -1719,6 +1764,96 @@ function switchTab(name){
   if(name === 'history') renderHistory();
 }
 
+/* ---------- TUTORIAL ---------- */
+const TOUR = [
+  {tab:'sell', target:null, title:'Welcome to your shrimp stall POS',
+   body:'This quick tour shows you how to sell, track your stock and see your profit. It takes about 2 minutes. You can replay it any time with the ? button at the top.'},
+  {tab:'products', target:'nav button[data-tab="products"]', title:'First, set up your products',
+   body:'Tap Products, then Edit on each item. Enter your selling price, what you pay for it (cost), and how much stock you have. The starting prices are samples, so replace them with your real ones.'},
+  {tab:'sell', target:'#tab-sell .product-card', title:'Tap a product to sell it',
+   body:'Each tap adds 1 unit (for example 1 kg) to the order. A number badge shows how many you added, and the line below the price shows how much stock is left.'},
+  {tab:'sell', target:'#tab-sell .chip-row', title:'Other ways to sell',
+   body:'By amount: the customer wants ₱100 worth. By weight: type kilos or grams. Edit price: for haggling. Choose "This sale only" for a one-time discount.'},
+  {tab:'sell', target:null, title:'Made a mistake?',
+   body:'After you tap a product, a black bar appears for 5 seconds with an Undo button. To cancel the whole order, tap Clear twice. Nothing is saved until you complete the sale.'},
+  {tab:'sell', target:null, title:'Checking out',
+   body:'When the order is ready, tap Checkout at the bottom. Check the items. Type the cash received to see the change, or leave it blank if the customer paid the exact amount. Then tap Complete sale. Your stock goes down automatically.'},
+  {tab:'inventory', target:'nav button[data-tab="inventory"]', title:'Watch your stock and money',
+   body:'Inventory shows how much of each product is left. Tap Restock when you buy more shrimp and enter what you paid. The cards at the top show your capital, income and ROI.'},
+  {tab:'trends', target:'nav button[data-tab="trends"]', title:'See what sells best',
+   body:'Trends shows your best days, busiest hours and top products. In the calendar, darker days sold more. Tap a day to see its orders. It fills up as you make sales.'},
+  {tab:'history', target:'#backupDownload', title:'Save a backup every day',
+   body:'History lists every sale. At the end of each day, tap Save backup here. If your phone or the app is ever reset, you can restore all your records from that file.'},
+  {tab:'sell', target:null, title:'You are ready to start',
+   body:'Start with the Products tab, then make your first sale. Tap the ? button at the top any time to see this tour again.'}
+];
+let tourIdx = 0;
+let tourOn = false;
+
+function startTour(){
+  tourOn = true;
+  tourIdx = 0;
+  document.getElementById('tour').classList.remove('hidden');
+  showTourStep();
+}
+
+async function endTour(){
+  tourOn = false;
+  document.getElementById('tour').classList.add('hidden');
+  document.getElementById('tourRing').style.display = 'none';
+  switchTab('sell');
+  window.scrollTo(0, 0);
+  try{ await window.storage.set('tour-done', '1', false); }catch(e){}
+}
+
+function showTourStep(){
+  const s = TOUR[tourIdx];
+  if(s.tab) switchTab(s.tab);
+  document.getElementById('tcStep').textContent = 'Step ' + (tourIdx + 1) + ' of ' + TOUR.length;
+  document.getElementById('tcTitle').textContent = s.title;
+  document.getElementById('tcBody').textContent = s.body;
+  document.getElementById('tcDots').innerHTML = TOUR.map((_, i) => `<i class="${i === tourIdx ? 'on' : ''}"></i>`).join('');
+  document.getElementById('tcBack').style.visibility = tourIdx === 0 ? 'hidden' : 'visible';
+  document.getElementById('tcNext').textContent = tourIdx === TOUR.length - 1 ? 'Start selling' : 'Next';
+  document.getElementById('tcSkip').style.visibility = tourIdx === TOUR.length - 1 ? 'hidden' : 'visible';
+  const ring = document.getElementById('tourRing');
+  ring.style.display = 'none';
+  document.getElementById('tourBlock').classList.remove('clear');
+  const card = document.getElementById('tourCard');
+  card.style.top = 'auto'; card.style.bottom = '12px';
+  setTimeout(positionTour, 80);
+}
+
+function positionTour(){
+  if(!tourOn) return;
+  const s = TOUR[tourIdx];
+  const el = s.target ? document.querySelector(s.target) : null;
+  const ring = document.getElementById('tourRing');
+  const card = document.getElementById('tourCard');
+  if(!el){
+    ring.style.display = 'none';
+    document.getElementById('tourBlock').classList.remove('clear');
+    card.style.top = 'auto'; card.style.bottom = '12px';
+    return;
+  }
+  if(!el.closest('header')) el.scrollIntoView({block:'center'});
+  setTimeout(() => {
+    if(!tourOn) return;
+    const r = el.getBoundingClientRect();
+    ring.style.left = (r.left - 6) + 'px';
+    ring.style.top = (r.top - 6) + 'px';
+    ring.style.width = (r.width + 12) + 'px';
+    ring.style.height = (r.height + 12) + 'px';
+    ring.style.display = 'block';
+    document.getElementById('tourBlock').classList.add('clear');
+    const lowerHalf = (r.top + r.height / 2) > window.innerHeight * 0.5;
+    if(lowerHalf){ card.style.bottom = 'auto'; card.style.top = '12px'; }
+    else { card.style.top = 'auto'; card.style.bottom = '12px'; }
+  }, 60);
+}
+
+window.addEventListener('resize', positionTour);
+
 /* ---------- INIT ---------- */
 async function init(){
   setTodayDate();
@@ -1776,6 +1911,22 @@ async function init(){
   document.getElementById('restockQty').addEventListener('input', updateRestockPreview);
   document.getElementById('restockCost').addEventListener('input', updateRestockPreview);
   document.getElementById('restockAddBtn').addEventListener('click', submitRestock);
+
+  document.getElementById('helpBtn').addEventListener('click', startTour);
+  document.getElementById('tcNext').addEventListener('click', () => {
+    if(tourIdx >= TOUR.length - 1){ endTour(); return; }
+    tourIdx += 1;
+    showTourStep();
+  });
+  document.getElementById('tcBack').addEventListener('click', () => {
+    if(tourIdx > 0){ tourIdx -= 1; showTourStep(); }
+  });
+  document.getElementById('tcSkip').addEventListener('click', endTour);
+
+  try{
+    const td = await window.storage.get('tour-done', false);
+    if(!td && sales.length === 0) startTour();
+  }catch(e){}
 }
 
 init();
