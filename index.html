@@ -742,6 +742,11 @@ const ROWS = [
 ['no_sales_rec',"No sales recorded yet.","Wala pang naitalang benta.","Wala pa sing natala nga baligya."],
 ['disc_to',"discounted to {price}","ibinaba sa {price}","ginpaubos sa {price}"],
 ['disc_given',"Discount given: {amt}","Diskwentong ibinigay: {amt}","Diskwento nga ginhatag: {amt}"],
+['er_title',"Erase all data","Burahin lahat ng data","Papaha tanan nga data"],
+['er_desc',"Deletes all products, stock, sales and history from this device and starts fresh. Save a backup first — this cannot be undone.","Buburahin ang lahat ng produkto, stock, benta at talaan sa device na ito at magsisimula ulit. Mag-save muna ng backup — hindi na ito maibabalik.","Papahaon ang tanan nga produkto, stock, baligya kag rekord sa sini nga device kag magasugod liwat. Mag-save anay sang backup — indi na ini mabalik."],
+['er_btn',"Erase all data","Burahin lahat","Papaha tanan"],
+['er_confirm',"Tap again to erase everything","Pindutin ulit para burahin lahat","Pislita liwat para papahaon tanan"],
+['er_done',"All data erased. The app is back to its default state.","Nabura na ang lahat ng data. Bumalik na ang app sa default.","Napapas na ang tanan nga data. Nabalik na ang app sa default."],
 ['bk_title',"Backup and restore","Backup at pagbabalik","Backup kag pagbalik"],
 ['bk_none',"You have not saved a backup yet.","Wala ka pang na-save na backup.","Wala ka pa sing natipig nga backup."],
 ['bk_last',"Last backup: {date} at {time}","Huling backup: {date} nang {time}","Katapusan nga backup: {date} sang {time}"],
@@ -857,9 +862,10 @@ const DEFAULT_PRODUCT_DEFS = [
   {id:'p6', k:'prod_tray', unit:'per tray', price:150, costPrice:95, stock:20, lowStock:4}
 ];
 function getDefaultProducts(){
-  return DEFAULT_PRODUCT_DEFS.map(d => ({id:d.id, name:t(d.k), unit:d.unit, price:d.price, costPrice:d.costPrice, stock:d.stock, lowStock:d.lowStock}));
+  return [];
 }
 function isUntouchedDefaults(){
+  return false;
   if(products.length !== DEFAULT_PRODUCT_DEFS.length) return false;
   return DEFAULT_PRODUCT_DEFS.every((d, i) => {
     const p = products[i];
@@ -907,7 +913,7 @@ function closeLangModal(){
 async function maybeStartTour(){
   try{
     const td = await window.storage.get('tour-done', false);
-    if(!td && sales.length === 0) startTour();
+    if((!td || !td.value) && sales.length === 0) startTour();
   }catch(e){}
 }
 
@@ -947,7 +953,7 @@ async function loadData(){
   }
   try{
     const lb = await window.storage.get('last-backup', false);
-    lastBackup = lb ? lb.value : null;
+    lastBackup = (lb && lb.value) ? lb.value : null;
   }catch(e){ lastBackup = null; }
   try{
     if(navigator.storage && navigator.storage.persist) await navigator.storage.persist();
@@ -1709,8 +1715,8 @@ function renderHistory(){
     html += '<div class="empty-note">' + t('no_sales_rec') + '</div>';
   }else{
     html += sales.map(s => {
-      const t = new Date(s.timestamp);
-      const timeStr = t.toLocaleDateString(locale(), {month:'short', day:'numeric'}) + ' · ' + t.toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
+      const d = new Date(s.timestamp);
+      const timeStr = d.toLocaleDateString(locale(), {month:'short', day:'numeric'}) + ' · ' + d.toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
       const itemsStr = s.items.map(i => {
         const wasDiscounted = i.originalPrice && Math.abs(i.originalPrice - i.price) > 0.001;
         return `${i.name} x${fmtQty(i.qty)}` + (wasDiscounted ? ' (' + t('disc_to', {price: PESO(i.price)}) + ')' : '');
@@ -1762,6 +1768,11 @@ function backupCardHtml(){
       <button class="secondary" id="backupRestorePick">${t('bk_restore')}</button>
     </div>
     <input type="file" id="backupFile" accept=".json,application/json" style="display:none;">
+    <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px;">
+      <div style="font-weight:700;font-size:14px;color:var(--red);">${t('er_title')}</div>
+      <div class="t-sub">${t('er_desc')}</div>
+      <button id="eraseBtn" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--red);background:#fff;color:var(--red);font-weight:700;font-size:14px;cursor:pointer;">${t('er_btn')}</button>
+    </div>
     <div id="backupMsg" style="font-size:12px;margin-top:8px;color:var(--ink-soft);"></div>
     ${restoreArea}
   </div>`;
@@ -1806,6 +1817,31 @@ function bindBackupHandlers(el){
   });
   const cancel = el.querySelector('#restoreCancel');
   if(cancel) cancel.addEventListener('click', () => { pendingRestore = null; renderHistory(); });
+  const eraseBtn = el.querySelector('#eraseBtn');
+  let eraseTimer = null;
+  eraseBtn.addEventListener('click', async () => {
+    if(!eraseTimer){
+      eraseBtn.textContent = t('er_confirm');
+      eraseBtn.style.background = 'var(--red)'; eraseBtn.style.color = '#fff';
+      eraseTimer = setTimeout(() => {
+        eraseTimer = null;
+        eraseBtn.textContent = t('er_btn');
+        eraseBtn.style.background = '#fff'; eraseBtn.style.color = 'var(--red)';
+      }, 3500);
+      return;
+    }
+    clearTimeout(eraseTimer); eraseTimer = null;
+    products = []; sales = []; purchases = []; cart = {};
+    pendingRestore = null; lastBackup = null;
+    await saveProducts(); await saveSales(); await savePurchases();
+    try{ await window.storage.set('last-backup', '', false); }catch(e){}
+    try{ await window.storage.set('tour-done', '', false); }catch(e){}
+    hideUndoToast(); resetClearButtons();
+    renderSell(); updateCartBar(); updateTodayHeader(); renderHistory();
+    const m = document.getElementById('backupMsg');
+    if(m) m.textContent = t('er_done');
+  });
+
   const confirmBtn = el.querySelector('#restoreConfirm');
   if(confirmBtn) confirmBtn.addEventListener('click', async () => {
     products = pendingRestore.products;
