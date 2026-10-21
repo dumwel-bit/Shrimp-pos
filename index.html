@@ -48,15 +48,15 @@
   .today-stat{text-align:right;}
   .today-stat .num{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;}
   .today-stat .label{font-size:11px;color:#B9D6CE;}
-  nav{display:flex;gap:4px;margin-top:14px;}
+  nav{display:flex;gap:2px;margin-top:14px;}
   nav button{
     flex:1;
     background:transparent;
     border:none;
     color:#B9D6CE;
-    font-size:12px;
+    font-size:11.5px;
     font-weight:600;
-    padding:10px 2px 12px 2px;
+    padding:10px 1px 12px 1px;
     border-bottom:3px solid transparent;
     cursor:pointer;
     white-space:nowrap;
@@ -268,6 +268,18 @@
     color:var(--ink-soft);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:14px;
   }
 
+  /* Expenses tab */
+  .ex-chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .ex-chip{padding:8px 10px;border-radius:18px;border:1px solid var(--line);background:#fff;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;}
+  .ex-chip.on{background:var(--teal,#0F3D3A);color:#fff;border-color:var(--teal,#0F3D3A);}
+  .ex-row{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:8px;display:flex;gap:10px;align-items:center;}
+  .ex-row .info{flex:1;min-width:0;}
+  .ex-row .en{font-weight:700;font-size:14px;}
+  .ex-row .em{font-size:12px;color:var(--ink-soft);margin-top:2px;overflow-wrap:anywhere;}
+  .ex-row .ea{font-weight:700;font-variant-numeric:tabular-nums;color:var(--red);white-space:nowrap;}
+  .ex-bar{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line);}
+  .ex-bar:last-child{border-bottom:none;}
+
   /* History tab */
   .sale-card{
     background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;
@@ -434,6 +446,7 @@
     <button class="active" data-tab="sell" data-i18n="nav_sell">Sell</button>
     <button data-tab="products" data-i18n="nav_products">Products</button>
     <button data-tab="inventory" data-i18n="nav_inventory">Inventory</button>
+    <button data-tab="expenses" data-i18n="nav_expenses">Expenses</button>
     <button data-tab="trends" data-i18n="nav_trends">Trends</button>
     <button data-tab="history" data-i18n="nav_history">History</button>
   </nav>
@@ -443,6 +456,7 @@
   <div id="tab-sell"></div>
   <div id="tab-products" style="display:none;"></div>
   <div id="tab-inventory" style="display:none;"></div>
+  <div id="tab-expenses" style="display:none;"></div>
   <div id="tab-trends" style="display:none;"></div>
   <div id="tab-history" style="display:none;"></div>
 </main>
@@ -597,7 +611,7 @@ if(!window.storage){
     }
   };
 }
-const PESO =v => '₱' + Number(v || 0).toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2});
+const PESO = v => { v = Number(v || 0); return (v < 0 ? '-' : '') + '₱' + Math.abs(v).toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2}); };
 
 let LANG = 'en';
 let langStored = false;
@@ -722,7 +736,7 @@ const ROWS = [
 ['fin_cogs',"Cost of goods sold","Puhunan ng mga naibenta","Puhunan sang mga naibaligya"],
 ['fin_net',"Net income","Netong kita","Neto nga kita"],
 ['fin_roi',"ROI","ROI","ROI"],
-['fin_note',"Stock value is what your unsold inventory cost you. Net income is sales minus the cost of what you sold (it doesn't include other expenses like ice, transport, or rent). ROI compares net income to everything you've spent restocking so far.","Ang halaga ng stock ay ang puhunan sa mga hindi pa naibebenta. Ang netong kita ay benta bawas ang puhunan ng mga naibenta (hindi kasama ang ibang gastos tulad ng yelo, pamasahe, o upa). Ikinukumpara ng ROI ang netong kita sa lahat ng ginastos mo sa pag-restock.","Ang bili sang stock amo ang puhunan sa mga wala pa mabaligya. Ang neto nga kita amo ang baligya nga ginkuhaan sang puhunan sang mga nabaligya (indi lakip ang iban nga gasto pareho sang yelo, pamasahe, ukon renta). Ginapaanggid sang ROI ang neto nga kita sa tanan nga ginagasto mo sa pag-restock."],
+['fin_note',"Stock value is what your unsold inventory cost you. Net income = sales − cost of goods sold − business expenses (add those in the Expenses tab). ROI compares net income to everything you've spent restocking so far.","Ang halaga ng stock ay ang puhunan sa mga hindi pa naibebenta. Netong kita = benta − puhunan ng naibenta − gastos sa negosyo (idagdag sa tab na Gastos). Ikinukumpara ng ROI ang netong kita sa lahat ng ginastos mo sa pag-restock.","Ang bili sang stock amo ang puhunan sa mga wala pa mabaligya. Neto nga kita = baligya − puhunan sang nabaligya − gasto sang negosyo (dugangi sa tab nga Gasto). Ginapaanggid sang ROI ang neto nga kita sa tanan nga ginagasto mo sa pag-restock."],
 ['section_stock',"Product stock","Stock ng mga produkto","Stock sang mga produkto"],
 ['low_stock',"Low stock","Mababang stock","Kadyot na lang"],
 ['on_hand',"{qty} {unit} on hand · worth {worth} · cost {cost} {perunit}","{qty} {unit} ang natitira · halagang {worth} · puhunan {cost} {perunit}","{qty} {unit} ang yara · bili {worth} · puhunan {cost} {perunit}"],
@@ -757,6 +771,49 @@ const ROWS = [
 ['recent_hint',"Made a mistake? Tap Edit to fix the amount, or Remove to cancel it. Stock adjusts automatically.","Nagkamali? Pindutin ang Baguhin para ayusin ang dami, o Alisin para kanselahin. Kusang aayusin ang stock.","Nasayop? Pislita ang Usbon para ayuson ang kadamuon, ukon Kuhaon para kanselahon. Awtomatiko nga maayo ang stock."],
 ['edit_restock_title',"Edit restock: {name}","Baguhin ang restock: {name}","Usbon ang restock: {name}"],
 ['restock_line',"+{qty} {unit} · {cost} each = {total}","+{qty} {unit} · {cost} bawat isa = {total}","+{qty} {unit} · {cost} kada isa = {total}"],
+['nav_expenses',"Expenses","Gastos","Gasto"],
+['fin_gross',"Gross profit (sales − cost of goods)","Kita bago gastos (benta − puhunan)","Kita antes gasto (baligya − puhunan)"],
+['fin_expenses',"Business expenses","Gastos sa negosyo","Gasto sang negosyo"],
+['ex_today',"Spent today","Gastos ngayon","Gasto subong"],
+['ex_month',"Spent this month","Gastos ngayong buwan","Gasto sa sini nga bulan"],
+['ex_all',"All-time expenses: {amt}","Kabuuang gastos: {amt}","Tanan nga gasto: {amt}"],
+['ex_add',"+ Add expense","+ Magdagdag ng gastos","+ Dugang gasto"],
+['ex_new',"New expense","Bagong gastos","Bag-o nga gasto"],
+['ex_edit',"Edit expense","Baguhin ang gastos","Usbon ang gasto"],
+['ex_cat',"Type of expense","Uri ng gastos","Klase sang gasto"],
+['ex_amount',"Amount each (₱)","Halaga bawat isa (₱)","Bili kada isa (₱)"],
+['ex_qty',"How many","Ilan","Pila"],
+['ex_date',"Date","Petsa","Petsa"],
+['ex_note',"Note (optional)","Tala (opsyonal)","Nota (opsyonal)"],
+['ex_total',"Total expense: {amt}","Kabuuang gastos: {amt}","Kabuuan nga gasto: {amt}"],
+['ex_total_hint',"Enter the amount and how many.","Ilagay ang halaga at kung ilan.","Isulod ang bili kag pila."],
+['ex_save',"Save expense","I-save ang gastos","Tipigi ang gasto"],
+['ex_bycat',"This month by type","Ngayong buwan ayon sa uri","Sa sini nga bulan suno sa klase"],
+['ex_recent',"Recent expenses","Mga huling gastos","Mga ulihi nga gasto"],
+['ex_none',"No expenses recorded yet.","Wala pang naitalang gastos.","Wala pa may natalang gasto."],
+['ex_err_amt',"Enter a valid amount.","Maglagay ng tamang halaga.","Isulod ang husto nga bili."],
+['ex_err_qty',"Enter how many (more than 0).","Ilagay kung ilan (higit sa 0).","Isulod kon pila (labaw sa 0)."],
+['ex_deleted',"Expense deleted","Nabura ang gastos","Napapas ang gasto"],
+['ex_saved',"Expense saved: {amt}","Na-save ang gastos: {amt}","Natipig ang gasto: {amt}"],
+['ex_calc',"{qty} × {amt}","{qty} × {amt}","{qty} × {amt}"],
+['ec_plastic',"Plastic wraps / packaging","Plastik / balot","Plastik / pambalot"],
+['ec_rent',"Rent","Upa","Renta"],
+['ec_boxtax',"Tax / charge per box","Buwis / singil bawat kahon","Buhis / singil kada kahon"],
+['ec_electric',"Electricity","Kuryente","Kuryente"],
+['ec_helper',"Buhay-buhay (errand helper)","Buhay-buhay (kasama sa palengke)","Buhay-buhay (ginasugo sa merkado)"],
+['ec_ice',"Ice","Yelo","Yelo"],
+['ec_transport',"Transport","Pamasahe","Pamasahe"],
+['ec_other',"Other","Iba pa","Iban pa"],
+['eqh_plastic',"e.g. number of packs or rolls","hal. bilang ng pack o rolyo","pananglitan: pila ka pack ukon rolyo"],
+['eqh_rent',"number of months (usually 1)","bilang ng buwan (karaniwan 1)","pila ka bulan (kasagaran 1)"],
+['eqh_boxtax',"number of boxes (27–30 kg each)","bilang ng kahon (27–30 kg bawat isa)","pila ka kahon (27–30 kg kada isa)"],
+['eqh_electric',"number of days","bilang ng araw","pila ka adlaw"],
+['eqh_helper',"number of tasks or trips","bilang ng gawain o biyahe","pila ka buhatan ukon biyahe"],
+['eqh_ice',"number of bags or blocks","bilang ng supot o bloke","pila ka supot ukon bloke"],
+['eqh_transport',"number of trips","bilang ng biyahe","pila ka biyahe"],
+['eqh_other',"how many (usually 1)","kung ilan (karaniwan 1)","pila (kasagaran 1)"],
+['t7b_title',"Track your expenses","Itala ang mga gastos","Tala-a ang mga gasto"],
+['t7b_body',"Record plastic, rent, box tax, electricity, buhay-buhay and other costs here. They are subtracted from your net income in Inventory.","Itala dito ang plastik, upa, buwis sa kahon, kuryente, buhay-buhay at iba pang gastos. Ibinabawas ang mga ito sa netong kita sa Inventory.","Tala-a diri ang plastik, renta, buhis sa kahon, kuryente, buhay-buhay kag iban pa nga gasto. Ginakuhaan ini sa neto nga kita sa Inventory."],
 ['bk_title',"Backup and restore","Backup at pagbabalik","Backup kag pagbalik"],
 ['bk_none',"You have not saved a backup yet.","Wala ka pang na-save na backup.","Wala ka pa sing natipig nga backup."],
 ['bk_last',"Last backup: {date} at {time}","Huling backup: {date} nang {time}","Katapusan nga backup: {date} sang {time}"],
@@ -931,6 +988,9 @@ async function maybeStartTour(){
 let products = [];
 let sales = [];
 let purchases = [];
+let expenses = [];
+let editingExpenseId = null;
+let showExpenseForm = false;
 let cart = {};
 let editingProductId = null;
 let dataReady = false;
@@ -962,6 +1022,10 @@ async function loadData(){
     purchases = [];
   }
   try{
+    const ex = await window.storage.get('expenses-log', false);
+    expenses = ex ? JSON.parse(ex.value) : [];
+  }catch(e){ expenses = []; }
+  try{
     const lb = await window.storage.get('last-backup', false);
     lastBackup = (lb && lb.value) ? lb.value : null;
   }catch(e){ lastBackup = null; }
@@ -978,6 +1042,10 @@ async function saveProducts(){
 async function saveSales(){
   try{ await window.storage.set('sales-log', JSON.stringify(sales), false); }
   catch(e){ console.error('Could not save sales', e); }
+}
+async function saveExpenses(){
+  try{ await window.storage.set('expenses-log', JSON.stringify(expenses), false); }
+  catch(e){ console.error('Could not save expenses', e); }
 }
 async function savePurchases(){
   try{ await window.storage.set('purchases-log', JSON.stringify(purchases), false); }
@@ -1628,9 +1696,10 @@ function computeFinancials(){
   const grossRevenue = sales.reduce((sum,s) => sum + s.total, 0);
   const cogs = sales.reduce((sum,s) => sum + s.items.reduce((a,i) => a + (i.costPrice||0) * i.qty, 0), 0);
   const grossProfit = grossRevenue - cogs;
-  const netIncome = grossProfit;
+  const totalExpenses = expenses.reduce((sum,e) => sum + (e.total || 0), 0);
+  const netIncome = grossProfit - totalExpenses;
   const roi = totalInvested > 0 ? (netIncome / totalInvested) * 100 : null;
-  return {capitalInStock, totalInvested, grossRevenue, cogs, grossProfit, netIncome, roi};
+  return {capitalInStock, totalInvested, grossRevenue, cogs, grossProfit, totalExpenses, netIncome, roi};
 }
 
 function renderInventory(){
@@ -1641,7 +1710,9 @@ function renderInventory(){
     <div class="fin-card"><div class="fl">${t('fin_invested')}</div><div class="fv">${PESO(f.totalInvested)}</div></div>
     <div class="fin-card accent"><div class="fl">${t('fin_revenue')}</div><div class="fv">${PESO(f.grossRevenue)}</div></div>
     <div class="fin-card"><div class="fl">${t('fin_cogs')}</div><div class="fv">${PESO(f.cogs)}</div></div>
-    <div class="fin-card ${f.grossProfit >= 0 ? 'positive' : 'negative'}"><div class="fl">${t('fin_net')}</div><div class="fv">${PESO(f.netIncome)}</div></div>
+    <div class="fin-card ${f.grossProfit >= 0 ? 'positive' : 'negative'}"><div class="fl">${t('fin_gross')}</div><div class="fv">${PESO(f.grossProfit)}</div></div>
+    <div class="fin-card"><div class="fl">${t('fin_expenses')}</div><div class="fv">${PESO(f.totalExpenses)}</div></div>
+    <div class="fin-card ${f.netIncome >= 0 ? 'positive' : 'negative'}"><div class="fl">${t('fin_net')}</div><div class="fv">${PESO(f.netIncome)}</div></div>
     <div class="fin-card ${f.roi === null ? '' : (f.roi >= 0 ? 'positive' : 'negative')}"><div class="fl">${t('fin_roi')}</div><div class="fv">${f.roi === null ? '—' : f.roi.toFixed(1) + '%'}</div></div>
   </div>
   <div class="fin-note">${t('fin_note')}</div>
@@ -1806,6 +1877,169 @@ async function removePurchase(pid){
   }, 8000);
 }
 
+/* ---------- EXPENSES TAB ---------- */
+const EXP_CATS = [
+  {id:'plastic', e:'🛍️'}, {id:'rent', e:'🏠'}, {id:'boxtax', e:'📦'}, {id:'electric', e:'💡'},
+  {id:'helper', e:'🧑‍🔧'}, {id:'ice', e:'🧊'}, {id:'transport', e:'🚚'}, {id:'other', e:'📝'}
+];
+function catLabel(id){
+  const c = EXP_CATS.find(x => x.id === id);
+  return c ? c.e + ' ' + t('ec_' + id) : t('ec_other');
+}
+function todayInputValue(){ return dkey(new Date()); }
+function expDateToIso(val, keepIso){
+  const [y,m,d] = val.split('-').map(Number);
+  const now = new Date();
+  if(keepIso){
+    const k = new Date(keepIso);
+    if(dkey(k) === val) return keepIso;
+  }
+  const isToday = val === dkey(now);
+  return new Date(y, m-1, d, isToday ? now.getHours() : 12, isToday ? now.getMinutes() : 0).toISOString();
+}
+function lastUnitAmt(cat){
+  const e = expenses.slice().sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).find(x => x.cat === cat);
+  return e ? e.unitAmt : '';
+}
+
+function renderExpenses(){
+  const el = document.getElementById('tab-expenses');
+  const now = new Date();
+  const tkey = dkey(now);
+  const monthKey = tkey.slice(0,7);
+  let today = 0, month = 0, all = 0;
+  const byCat = {};
+  expenses.forEach(e => {
+    const k = dkey(new Date(e.timestamp));
+    all += e.total;
+    if(k === tkey) today += e.total;
+    if(k.slice(0,7) === monthKey){ month += e.total; byCat[e.cat] = (byCat[e.cat] || 0) + e.total; }
+  });
+  let html = `<div class="fin-grid">
+    <div class="fin-card"><div class="fl">${t('ex_today')}</div><div class="fv">${PESO(today)}</div></div>
+    <div class="fin-card"><div class="fl">${t('ex_month')}</div><div class="fv">${PESO(month)}</div></div>
+  </div>
+  <div class="fin-note" style="margin-top:-4px;">${t('ex_all', {amt: PESO(all)})}</div>`;
+
+  if(showExpenseForm){
+    const editing = editingExpenseId ? expenses.find(x => x.id === editingExpenseId) : null;
+    const cat = editing ? editing.cat : 'plastic';
+    html += `<div class="add-form" id="exForm">
+      <h3>${editing ? t('ex_edit') : t('ex_new')}</h3>
+      <label>${t('ex_cat')}</label>
+      <div class="ex-chips" id="exChips">${EXP_CATS.map(c => `<button type="button" class="ex-chip ${c.id === cat ? 'on' : ''}" data-cat="${c.id}">${c.e} ${escapeHtml(t('ec_' + c.id))}</button>`).join('')}</div>
+      <label>${t('ex_amount')}</label>
+      <input type="number" inputmode="decimal" id="exAmt" min="0" step="any" value="${editing ? editing.unitAmt : lastUnitAmt(cat)}">
+      <label>${t('ex_qty')}</label>
+      <input type="number" inputmode="decimal" id="exQty" min="0" step="any" value="${editing ? editing.qty : 1}">
+      <div class="t-sub" id="exQtyHint" style="margin:4px 0 0;">${t('eqh_' + cat)}</div>
+      <label>${t('ex_date')}</label>
+      <input type="date" id="exDate" value="${editing ? dkey(new Date(editing.timestamp)) : todayInputValue()}">
+      <label>${t('ex_note')}</label>
+      <input type="text" id="exNote" value="${editing ? escapeHtml(editing.note || '') : ''}">
+      <div class="highlight-line" id="exTotal" style="margin-top:12px;"></div>
+      <div id="exErr" style="color:var(--red);font-size:12px;margin-top:6px;"></div>
+      <div class="form-btn-row">
+        <button class="cancel" id="exCancel">${t('cancel')}</button>
+        <button class="save" id="exSave">${editing ? t('save_changes') : t('ex_save')}</button>
+      </div>
+    </div>`;
+  }else{
+    html += `<button class="fab-add" id="exAddBtn">${t('ex_add')}</button>`;
+  }
+
+  const cats = Object.keys(byCat).sort((a,b) => byCat[b] - byCat[a]);
+  if(cats.length){
+    html += `<div class="t-card"><h3 style="margin:0 0 6px;font-size:15px;">${t('ex_bycat')}</h3>` +
+      cats.map(c => `<div class="ex-bar"><span>${escapeHtml(catLabel(c))}</span><b>${PESO(byCat[c])}</b></div>`).join('') + `</div>`;
+  }
+
+  html += `<div class="section-label">${t('ex_recent')}</div>`;
+  if(expenses.length === 0){
+    html += `<div class="empty-note">${t('ex_none')}</div>`;
+  }else{
+    html += expenses.slice().sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 40).map(e => {
+      const d = new Date(e.timestamp);
+      const when = d.toLocaleDateString(locale(), {month:'short', day:'numeric'});
+      const calc = e.qty !== 1 ? ' · ' + t('ex_calc', {qty: fmtQty(e.qty), amt: PESO(e.unitAmt)}) : '';
+      return `<div class="ex-row" data-id="${e.id}">
+        <div class="info"><div class="en">${escapeHtml(catLabel(e.cat))}</div>
+          <div class="em">${escapeHtml(when + calc + (e.note ? ' · ' + e.note : ''))}</div></div>
+        <div class="ea">${PESO(e.total)}</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <button class="icon-btn ex-edit">${t('edit')}</button>
+          <button class="icon-btn del ex-del">${t('delete')}</button>
+        </div></div>`;
+    }).join('');
+  }
+  el.innerHTML = html;
+
+  const addBtn = el.querySelector('#exAddBtn');
+  if(addBtn) addBtn.addEventListener('click', () => { showExpenseForm = true; editingExpenseId = null; renderExpenses(); });
+
+  el.querySelectorAll('.ex-edit').forEach(b => b.addEventListener('click', () => {
+    editingExpenseId = b.closest('.ex-row').dataset.id; showExpenseForm = true; renderExpenses();
+    window.scrollTo({top:0, behavior:'smooth'});
+  }));
+  el.querySelectorAll('.ex-del').forEach(b => b.addEventListener('click', async () => {
+    const id = b.closest('.ex-row').dataset.id;
+    const idx = expenses.findIndex(x => x.id === id);
+    if(idx < 0) return;
+    const removed = expenses[idx];
+    expenses.splice(idx, 1);
+    await saveExpenses(); renderExpenses();
+    showUndoToast(t('ex_deleted'), async () => {
+      expenses.splice(Math.min(idx, expenses.length), 0, removed);
+      await saveExpenses(); renderExpenses();
+    }, 8000);
+  }));
+
+  if(showExpenseForm){
+    const editing = editingExpenseId ? expenses.find(x => x.id === editingExpenseId) : null;
+    let curCat = editing ? editing.cat : 'plastic';
+    let amtTouched = !!editing;
+    const amt = el.querySelector('#exAmt'), qty = el.querySelector('#exQty');
+    const upd = () => {
+      const a = parseFloat(amt.value), q = parseFloat(qty.value);
+      el.querySelector('#exTotal').textContent = (isNaN(a) || isNaN(q)) ? t('ex_total_hint') : t('ex_total', {amt: PESO(a * q)});
+    };
+    amt.addEventListener('input', () => { amtTouched = true; upd(); });
+    qty.addEventListener('input', upd);
+    el.querySelectorAll('.ex-chip').forEach(c => c.addEventListener('click', () => {
+      curCat = c.dataset.cat;
+      el.querySelectorAll('.ex-chip').forEach(x => x.classList.toggle('on', x === c));
+      el.querySelector('#exQtyHint').textContent = t('eqh_' + curCat);
+      if(!amtTouched){ amt.value = lastUnitAmt(curCat); }
+      upd();
+    }));
+    upd();
+    el.querySelector('#exCancel').addEventListener('click', () => { showExpenseForm = false; editingExpenseId = null; renderExpenses(); });
+    el.querySelector('#exSave').addEventListener('click', async () => {
+      const a = parseFloat(amt.value), q = parseFloat(qty.value);
+      const err = el.querySelector('#exErr');
+      if(isNaN(a) || a <= 0){ err.textContent = t('ex_err_amt'); return; }
+      if(isNaN(q) || q <= 0){ err.textContent = t('ex_err_qty'); return; }
+      const dateVal = el.querySelector('#exDate').value || todayInputValue();
+      const note = el.querySelector('#exNote').value.trim();
+      const total = Math.round(a * q * 100) / 100;
+      let undoFn;
+      if(editing){
+        const before = {...editing};
+        Object.assign(editing, {cat: curCat, unitAmt: a, qty: q, total, note, timestamp: expDateToIso(dateVal, editing.timestamp)});
+        undoFn = async () => { const cur = expenses.find(x => x.id === before.id); if(cur) Object.assign(cur, before); await saveExpenses(); renderExpenses(); };
+      }else{
+        const ne = {id: uid(), timestamp: expDateToIso(dateVal), cat: curCat, unitAmt: a, qty: q, total, note};
+        expenses.push(ne);
+        undoFn = async () => { expenses = expenses.filter(x => x.id !== ne.id); await saveExpenses(); renderExpenses(); };
+      }
+      await saveExpenses();
+      showExpenseForm = false; editingExpenseId = null;
+      renderExpenses();
+      showUndoToast(t('ex_saved', {amt: PESO(total)}), undoFn, 8000);
+    });
+  }
+}
+
 /* ---------- HISTORY TAB ---------- */
 function renderHistory(){
   const el = document.getElementById('tab-history');
@@ -1893,7 +2127,7 @@ function backupCardHtml(){
 function bindBackupHandlers(el){
   const msg = el.querySelector('#backupMsg');
   el.querySelector('#backupDownload').addEventListener('click', async () => {
-    const data = {app:'shrimp-pos', version:1, exportedAt:new Date().toISOString(), products, sales, purchases};
+    const data = {app:'shrimp-pos', version:1, exportedAt:new Date().toISOString(), products, sales, purchases, expenses};
     const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1918,6 +2152,7 @@ function bindBackupHandlers(el){
         const d = JSON.parse(reader.result);
         if(!d || !Array.isArray(d.products) || !Array.isArray(d.sales)) throw new Error('bad');
         d.purchases = Array.isArray(d.purchases) ? d.purchases : [];
+        d.expenses = Array.isArray(d.expenses) ? d.expenses : [];
         pendingRestore = d;
         renderHistory();
       }catch(e){
@@ -1943,9 +2178,9 @@ function bindBackupHandlers(el){
       return;
     }
     clearTimeout(eraseTimer); eraseTimer = null;
-    products = []; sales = []; purchases = []; cart = {};
+    products = []; sales = []; purchases = []; expenses = []; cart = {};
     pendingRestore = null; lastBackup = null;
-    await saveProducts(); await saveSales(); await savePurchases();
+    await saveProducts(); await saveSales(); await savePurchases(); await saveExpenses();
     try{ await window.storage.set('last-backup', '', false); }catch(e){}
     try{ await window.storage.set('tour-done', '', false); }catch(e){}
     hideUndoToast(); resetClearButtons();
@@ -1959,6 +2194,7 @@ function bindBackupHandlers(el){
     products = pendingRestore.products;
     sales = pendingRestore.sales;
     purchases = pendingRestore.purchases;
+    expenses = pendingRestore.expenses || [];
     products.forEach(p => {
       if(typeof p.costPrice !== 'number') p.costPrice = 0;
       if(typeof p.stock !== 'number') p.stock = 0;
@@ -1966,7 +2202,7 @@ function bindBackupHandlers(el){
     });
     pendingRestore = null;
     cart = {};
-    await saveProducts(); await saveSales(); await savePurchases();
+    await saveProducts(); await saveSales(); await savePurchases(); await saveExpenses();
     renderSell(); updateTodayHeader(); renderHistory();
     const m = document.getElementById('backupMsg');
     if(m) m.textContent = t('bk_restored');
@@ -2230,6 +2466,9 @@ function switchTab(name){
   document.getElementById('tab-inventory').style.display = name === 'inventory' ? 'block' : 'none';
   document.getElementById('tab-history').style.display = name === 'history' ? 'block' : 'none';
   document.getElementById('tab-trends').style.display = name === 'trends' ? 'block' : 'none';
+  document.getElementById('tab-expenses').style.display = name === 'expenses' ? 'block' : 'none';
+  if(name !== 'expenses'){ showExpenseForm = false; editingExpenseId = null; }
+  if(name === 'expenses') renderExpenses();
   if(name === 'trends') renderTrends();
   if(name === 'products') renderProducts();
   if(name === 'inventory') renderInventory();
@@ -2245,6 +2484,7 @@ const TOUR = [
   {tab:'sell', target:null, k:'t5'},
   {tab:'sell', target:null, k:'t6'},
   {tab:'inventory', target:'nav button[data-tab="inventory"]', k:'t7'},
+  {tab:'expenses', target:'nav button[data-tab="expenses"]', k:'t7b'},
   {tab:'trends', target:'nav button[data-tab="trends"]', k:'t8'},
   {tab:'history', target:'#backupDownload', k:'t9'},
   {tab:'sell', target:null, k:'t10'}
