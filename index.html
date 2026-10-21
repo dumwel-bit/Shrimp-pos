@@ -747,6 +747,16 @@ const ROWS = [
 ['er_btn',"Erase all data","Burahin lahat","Papaha tanan"],
 ['er_confirm',"Tap again to erase everything","Pindutin ulit para burahin lahat","Pislita liwat para papahaon tanan"],
 ['er_done',"All data erased. The app is back to its default state.","Nabura na ang lahat ng data. Bumalik na ang app sa default.","Napapas na ang tanan nga data. Nabalik na ang app sa default."],
+['u_restock',"Added {qty} {unit} to {name}","Nadagdag ang {qty} {unit} sa {name}","Nadugang ang {qty} {unit} sa {name}"],
+['u_restock_removed',"Restock removed","Natanggal ang restock","Natanggal ang restock"],
+['u_restock_edited',"Restock updated","Na-update ang restock","Naupdate ang restock"],
+['u_prod_added',"Product added: {name}","Naidagdag ang produkto: {name}","Nadugang ang produkto: {name}"],
+['u_prod_saved',"Changes saved: {name}","Na-save ang pagbabago: {name}","Natipig ang pagbag-o: {name}"],
+['u_prod_deleted',"Deleted: {name}","Binura: {name}","Gin-papas: {name}"],
+['recent_restocks',"Recent restocks","Mga huling restock","Mga ulihi nga restock"],
+['recent_hint',"Made a mistake? Tap Edit to fix the amount, or Remove to cancel it. Stock adjusts automatically.","Nagkamali? Pindutin ang Baguhin para ayusin ang dami, o Alisin para kanselahin. Kusang aayusin ang stock.","Nasayop? Pislita ang Usbon para ayuson ang kadamuon, ukon Kuhaon para kanselahon. Awtomatiko nga maayo ang stock."],
+['edit_restock_title',"Edit restock: {name}","Baguhin ang restock: {name}","Usbon ang restock: {name}"],
+['restock_line',"+{qty} {unit} · {cost} each = {total}","+{qty} {unit} · {cost} bawat isa = {total}","+{qty} {unit} · {cost} kada isa = {total}"],
 ['bk_title',"Backup and restore","Backup at pagbabalik","Backup kag pagbalik"],
 ['bk_none',"You have not saved a backup yet.","Wala ka pang na-save na backup.","Wala ka pa sing natipig nga backup."],
 ['bk_last',"Last backup: {date} at {time}","Huling backup: {date} nang {time}","Katapusan nga backup: {date} sang {time}"],
@@ -1062,7 +1072,7 @@ function addToCart(id){
 }
 
 let undoTimer = null;
-function showUndoToast(message, undoFn){
+function showUndoToast(message, undoFn, ms){
   clearTimeout(undoTimer);
   document.getElementById('undoMsg').textContent = message;
   const oldBtn = document.getElementById('undoBtn');
@@ -1073,7 +1083,7 @@ function showUndoToast(message, undoFn){
     hideUndoToast();
   });
   document.getElementById('undoToast').classList.remove('hidden');
-  undoTimer = setTimeout(hideUndoToast, 5000);
+  undoTimer = setTimeout(hideUndoToast, ms || 5000);
 }
 function hideUndoToast(){
   document.getElementById('undoToast').classList.add('hidden');
@@ -1525,11 +1535,21 @@ function renderProducts(){
       showProductForm();
     });
     row.querySelector('.del').addEventListener('click', async () => {
+      const idx = products.findIndex(p => p.id === id);
+      if(idx < 0) return;
+      const removed = products[idx];
+      const removedCart = cart[id];
       products = products.filter(p => p.id !== id);
       delete cart[id];
       await saveProducts();
       renderProducts();
       renderSell();
+      showUndoToast(t('u_prod_deleted', {name: removed.name}), async () => {
+        products.splice(Math.min(idx, products.length), 0, removed);
+        if(removedCart) cart[id] = removedCart;
+        await saveProducts();
+        renderProducts(); renderSell(); updateCartBar();
+      }, 8000);
     });
   });
 }
@@ -1575,16 +1595,29 @@ function showProductForm(){
     const finalCost = isNaN(cost) || cost < 0 ? 0 : cost;
     const finalStock = isNaN(stock) || stock < 0 ? 0 : stock;
     const finalLowStock = isNaN(lowStock) || lowStock < 0 ? 2 : lowStock;
+    let undoFn;
     if(editing){
+      const before = {...editing};
       editing.name = name; editing.price = price; editing.unit = unit;
       editing.costPrice = finalCost; editing.stock = finalStock; editing.lowStock = finalLowStock;
+      undoFn = async () => {
+        const cur = products.find(x => x.id === before.id);
+        if(cur) Object.assign(cur, before);
+        await saveProducts(); renderProducts(); renderSell(); updateCartBar();
+      };
     }else{
-      products.push({id: uid(), name, price, unit, costPrice: finalCost, stock: finalStock, lowStock: finalLowStock});
+      const np = {id: uid(), name, price, unit, costPrice: finalCost, stock: finalStock, lowStock: finalLowStock};
+      products.push(np);
+      undoFn = async () => {
+        products = products.filter(x => x.id !== np.id); delete cart[np.id];
+        await saveProducts(); renderProducts(); renderSell(); updateCartBar();
+      };
     }
     await saveProducts();
     editingProductId = null;
     renderProducts();
     renderSell();
+    showUndoToast(t(editing ? 'u_prod_saved' : 'u_prod_added', {name}), undoFn, 8000);
   });
 }
 
@@ -1629,28 +1662,55 @@ function renderInventory(){
       </div>`;
     }).join('');
   }
+  if(purchases.length){
+    html += `<div class="section-label">${t('recent_restocks')}</div><div class="t-sub" style="margin:-4px 2px 8px;">${t('recent_hint')}</div>`;
+    html += purchases.slice(0, 10).map(pu => {
+      const pr = products.find(x => x.id === pu.productId);
+      const d = new Date(pu.timestamp);
+      const when = d.toLocaleDateString(locale(), {month:'short', day:'numeric'}) + ' · ' + d.toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
+      const line = t('restock_line', {qty: fmtQty(pu.qty), unit: pr ? unitWord(pr.unit) : '', cost: PESO(pu.costPerUnit), total: PESO(pu.totalCost)});
+      return `<div class="stock-row" data-pid="${pu.id}">
+        <div class="info"><div class="sname">${escapeHtml(pu.productName)}</div><div class="smeta">${escapeHtml(when)}<br>${escapeHtml(line)}</div></div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <button class="restock-btn pu-edit" data-pid="${pu.id}">${t('edit')}</button>
+          <button class="restock-btn pu-del" data-pid="${pu.id}" style="background:#fff;color:var(--red);border:1px solid var(--red);">${t('remove')}</button>
+        </div></div>`;
+    }).join('');
+  }
   el.innerHTML = html;
 
-  el.querySelectorAll('.restock-btn').forEach(btn => {
+  el.querySelectorAll('.restock-btn:not(.pu-edit):not(.pu-del)').forEach(btn => {
     btn.addEventListener('click', () => openRestockModal(btn.dataset.id));
+  });
+  el.querySelectorAll('.pu-edit').forEach(btn => {
+    btn.addEventListener('click', () => openRestockModal(null, btn.dataset.pid));
+  });
+  el.querySelectorAll('.pu-del').forEach(btn => {
+    btn.addEventListener('click', () => removePurchase(btn.dataset.pid));
   });
 }
 
 let restockProductId = null;
 
-function openRestockModal(id){
-  const p = products.find(x => x.id === id);
-  if(!p) return;
-  restockProductId = id;
-  document.getElementById('restockModalTitle').textContent = t('restock_title', {name: p.name});
-  document.getElementById('restockQty').value = '';
-  document.getElementById('restockCost').value = p.costPrice || '';
+let restockEditId = null;
+function openRestockModal(id, editPid){
+  restockEditId = editPid || null;
+  const pu = editPid ? purchases.find(x => x.id === editPid) : null;
+  if(editPid && !pu) return;
+  const p = products.find(x => x.id === (pu ? pu.productId : id));
+  if(!p){ if(pu){ restockEditId = null; } return; }
+  restockProductId = p.id;
+  document.getElementById('restockModalTitle').textContent = pu ? t('edit_restock_title', {name: p.name}) : t('restock_title', {name: p.name});
+  document.getElementById('restockAddBtn').textContent = pu ? t('save_changes') : t('add_to_stock');
+  document.getElementById('restockQty').value = pu ? pu.qty : '';
+  document.getElementById('restockCost').value = pu ? pu.costPerUnit : (p.costPrice || '');
   document.getElementById('restockError').textContent = '';
   updateRestockPreview();
   document.getElementById('restockModal').classList.remove('hidden');
 }
 
 function closeRestockModal(){
+  restockEditId = null;
   document.getElementById('restockModal').classList.add('hidden');
   restockProductId = null;
 }
@@ -1664,7 +1724,8 @@ function updateRestockPreview(){
     preview.innerHTML = t('restock_hint');
     return;
   }
-  const newStock = p.stock + qty;
+  const oldPu = restockEditId ? purchases.find(x => x.id === restockEditId) : null;
+  const newStock = p.stock + qty - (oldPu ? oldPu.qty : 0);
   preview.innerHTML = t('restock_preview', {total: '<span class="qv2">' + PESO(qty * cost) + '</span>', stock: '<span class="qv2">' + fmtQty(newStock) + '</span>', unit: escapeHtml(unitWord(p.unit))});
 }
 
@@ -1676,9 +1737,30 @@ async function submitRestock(){
   if(!p) return;
   if(isNaN(qty) || qty <= 0){ err.textContent = t('valid_qty'); return; }
   if(isNaN(cost) || cost < 0){ err.textContent = t('valid_cost'); return; }
-  p.stock = Math.round((p.stock + qty) * 1000) / 1000;
+  const r3 = v => Math.round(v * 1000) / 1000;
+  if(restockEditId){
+    const pu = purchases.find(x => x.id === restockEditId);
+    if(!pu) return;
+    const before = {pu: {...pu}, stock: p.stock, costPrice: p.costPrice};
+    const isLatest = purchases.find(x => x.productId === p.id) === pu;
+    p.stock = Math.max(0, r3(p.stock + qty - pu.qty));
+    if(isLatest) p.costPrice = cost;
+    pu.qty = qty; pu.costPerUnit = cost; pu.totalCost = qty * cost;
+    await saveProducts(); await savePurchases();
+    closeRestockModal(); renderInventory(); renderSell();
+    showUndoToast(t('u_restock_edited'), async () => {
+      const cp = purchases.find(x => x.id === before.pu.id);
+      if(cp) Object.assign(cp, before.pu);
+      const cprod = products.find(x => x.id === p.id);
+      if(cprod){ cprod.stock = before.stock; cprod.costPrice = before.costPrice; }
+      await saveProducts(); await savePurchases(); renderInventory(); renderSell();
+    }, 8000);
+    return;
+  }
+  const prevStock = p.stock, prevCost = p.costPrice;
+  p.stock = r3(p.stock + qty);
   p.costPrice = cost;
-  purchases.unshift({
+  const newPu = {
     id: uid(),
     timestamp: new Date().toISOString(),
     productId: p.id,
@@ -1686,12 +1768,42 @@ async function submitRestock(){
     qty,
     costPerUnit: cost,
     totalCost: qty * cost
-  });
+  };
+  purchases.unshift(newPu);
   await saveProducts();
   await savePurchases();
   closeRestockModal();
   renderInventory();
   renderSell();
+  showUndoToast(t('u_restock', {qty: fmtQty(qty), unit: unitWord(p.unit), name: p.name}), async () => {
+    purchases = purchases.filter(x => x.id !== newPu.id);
+    const cprod = products.find(x => x.id === p.id);
+    if(cprod){ cprod.stock = Math.max(0, r3(cprod.stock - qty)); cprod.costPrice = prevCost; }
+    await saveProducts(); await savePurchases(); renderInventory(); renderSell();
+  }, 8000);
+}
+
+async function removePurchase(pid){
+  const idx = purchases.findIndex(x => x.id === pid);
+  if(idx < 0) return;
+  const pu = purchases[idx];
+  const prod = products.find(x => x.id === pu.productId);
+  const r3 = v => Math.round(v * 1000) / 1000;
+  const before = prod ? {stock: prod.stock, costPrice: prod.costPrice} : null;
+  purchases.splice(idx, 1);
+  if(prod){
+    prod.stock = Math.max(0, r3(prod.stock - pu.qty));
+    const prev = purchases.find(x => x.productId === prod.id);
+    if(prev) prod.costPrice = prev.costPerUnit;
+  }
+  await saveProducts(); await savePurchases();
+  renderInventory(); renderSell();
+  showUndoToast(t('u_restock_removed'), async () => {
+    purchases.splice(Math.min(idx, purchases.length), 0, pu);
+    const cprod = products.find(x => x.id === pu.productId);
+    if(cprod && before){ cprod.stock = before.stock; cprod.costPrice = before.costPrice; }
+    await saveProducts(); await savePurchases(); renderInventory(); renderSell();
+  }, 8000);
 }
 
 /* ---------- HISTORY TAB ---------- */
