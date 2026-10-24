@@ -281,6 +281,18 @@
   .ex-bar:last-child{border-bottom:none;}
 
   /* History tab */
+  .day-group{margin-bottom:12px;}
+  .day-head{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;text-align:left;color:var(--ink);font-family:inherit;}
+  .day-head .dh-l{display:flex;flex-direction:column;gap:2px;font-size:14px;}
+  .day-head small{font-size:12px;color:var(--ink-soft);}
+  .day-head .dh-r{font-weight:700;font-size:16px;font-variant-numeric:tabular-nums;color:var(--coral-dark);white-space:nowrap;}
+  .day-head .dh-r i{font-style:normal;font-size:10px;color:var(--ink-soft);margin-left:8px;}
+  .day-stock{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;}
+  .ds-title{font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;}
+  .ds-row{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:6px;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--line);align-items:baseline;}
+  .ds-row:last-child{border-bottom:none;}
+  .ds-row span:not(:first-child){text-align:right;font-variant-numeric:tabular-nums;}
+  .ds-hd{font-size:11px;color:var(--ink-soft);font-weight:600;}
   .sale-card{
     background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;
   }
@@ -814,6 +826,15 @@ const ROWS = [
 ['eqh_other',"how many (usually 1)","kung ilan (karaniwan 1)","pila (kasagaran 1)"],
 ['t7b_title',"Track your expenses","Itala ang mga gastos","Tala-a ang mga gasto"],
 ['t7b_body',"Record plastic, rent, box tax, electricity, buhay-buhay and other costs here. They are subtracted from your net income in Inventory.","Itala dito ang plastik, upa, buwis sa kahon, kuryente, buhay-buhay at iba pang gastos. Ibinabawas ang mga ito sa netong kita sa Inventory.","Tala-a diri ang plastik, renta, buhis sa kahon, kuryente, buhay-buhay kag iban pa nga gasto. Ginakuhaan ini sa neto nga kita sa Inventory."],
+['hd_today',"Today","Ngayon","Subong"],
+['hd_yday',"Yesterday","Kahapon","Kahapon"],
+['hd_orders_one',"{n} order","{n} order","{n} ka order"],
+['hd_orders_many',"{n} orders","{n} order","{n} ka order"],
+['hd_nosales',"No sales this day (stock was added).","Walang benta sa araw na ito (may nadagdag na stock).","Wala sing baligya sa sini nga adlaw (may nadugang nga stock)."],
+['hd_stock',"Stock for this day","Stock sa araw na ito","Stock sa sini nga adlaw"],
+['hd_sold',"Sold","Naibenta","Nabaligya"],
+['hd_added',"Added","Idinagdag","Gindugang"],
+['hd_left',"Left","Natira","Nabilin"],
 ['bk_title',"Backup and restore","Backup at pagbabalik","Backup kag pagbalik"],
 ['bk_none',"You have not saved a backup yet.","Wala ka pang na-save na backup.","Wala ka pa sing natipig nga backup."],
 ['bk_last',"Last backup: {date} at {time}","Huling backup: {date} nang {time}","Katapusan nga backup: {date} sang {time}"],
@@ -2040,6 +2061,83 @@ function renderExpenses(){
   }
 }
 
+/* ---------- DAILY HISTORY ---------- */
+let openDays = new Set([dkey(new Date())]);
+let openDaysTouched = false;
+function dayTitle(key){
+  const [y,m,d] = key.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  const base = dt.toLocaleDateString(locale(), {weekday:'long', month:'short', day:'numeric'});
+  const today = dkey(new Date());
+  const yest = dkey(new Date(Date.now() - 86400000));
+  if(key === today) return t('hd_today') + ' · ' + base;
+  if(key === yest) return t('hd_yday') + ' · ' + base;
+  return base;
+}
+function historyDaysHtml(){
+  const r3 = v => Math.round(v * 1000) / 1000;
+  const days = {};
+  const get = k => days[k] || (days[k] = {sales:[], total:0, sold:{}, added:{}});
+  sales.forEach(s => {
+    const k = dkey(new Date(s.timestamp)); const dd = get(k);
+    dd.sales.push(s); dd.total += s.total;
+    s.items.forEach(i => {
+      const o = dd.sold[i.productId] || (dd.sold[i.productId] = {name:i.name, unit:i.unit, qty:0});
+      o.qty += i.qty;
+    });
+  });
+  purchases.forEach(pu => {
+    const k = dkey(new Date(pu.timestamp)); const dd = get(k);
+    const o = dd.added[pu.productId] || (dd.added[pu.productId] = {name:pu.productName, qty:0});
+    o.qty += pu.qty;
+  });
+  const keys = Object.keys(days).sort().reverse();
+  // stock left at end of each day = now - later restocks + later sales
+  const left = {}; products.forEach(p => left[p.id] = p.stock);
+  const leftByDay = {};
+  keys.forEach(k => {               // newest first
+    leftByDay[k] = {...left};
+    const dd = days[k];
+    Object.entries(dd.added).forEach(([id,o]) => { if(id in left) left[id] = r3(left[id] - o.qty); });
+    Object.entries(dd.sold).forEach(([id,o]) => { if(id in left) left[id] = r3(left[id] + o.qty); });
+  });
+  return keys.map(k => {
+    const dd = days[k];
+    const open = openDays.has(k);
+    const n = dd.sales.length;
+    let h = `<div class="day-group"><button class="day-head" data-day="${k}">
+      <span class="dh-l"><b>${escapeHtml(dayTitle(k))}</b><small>${t(n === 1 ? 'hd_orders_one' : 'hd_orders_many', {n})}</small></span>
+      <span class="dh-r">${PESO(dd.total)}<i>${open ? '▲' : '▼'}</i></span></button>`;
+    if(open){
+      h += dd.sales.map(s => {
+        const d = new Date(s.timestamp);
+        const timeStr = d.toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
+        const itemsStr = s.items.map(i => {
+          const wasDiscounted = i.originalPrice && Math.abs(i.originalPrice - i.price) > 0.001;
+          return `${i.name} x${fmtQty(i.qty)}` + (wasDiscounted ? ' (' + t('disc_to', {price: PESO(i.price)}) + ')' : '');
+        }).join(', ');
+        return `<div class="sale-card">
+          <div class="sale-top"><span class="sale-time">${timeStr}</span><span class="sale-total">${PESO(s.total)}</span></div>
+          <div class="sale-items">${escapeHtml(itemsStr)}</div>
+          ${s.discount ? `<div style="font-size:11px;color:var(--coral-dark);margin-top:4px;font-weight:700;">${t('disc_given', {amt: PESO(s.discount)})}</div>` : ''}
+        </div>`;
+      }).join('') || `<div class="t-sub" style="margin:6px 2px;">${t('hd_nosales')}</div>`;
+      const ids = [...new Set([...Object.keys(dd.sold), ...Object.keys(dd.added)])];
+      h += `<div class="day-stock"><div class="ds-title">${t('hd_stock')}</div>
+        <div class="ds-row ds-hd"><span>&nbsp;</span><span>${t('hd_sold')}</span><span>${t('hd_added')}</span><span>${t('hd_left')}</span></div>` +
+        ids.map(id => {
+          const pr = products.find(x => x.id === id);
+          const nm = pr ? pr.name : ((dd.sold[id] || dd.added[id]).name);
+          const sold = dd.sold[id] ? fmtQty(dd.sold[id].qty) : '–';
+          const add = dd.added[id] ? '+' + fmtQty(dd.added[id].qty) : '–';
+          const lf = (id in leftByDay[k]) ? fmtQty(Math.max(0, leftByDay[k][id])) : '–';
+          return `<div class="ds-row"><span>${escapeHtml(nm)}</span><span>${sold}</span><span>${add}</span><span><b>${lf}</b></span></div>`;
+        }).join('') + `</div>`;
+    }
+    return h + `</div>`;
+  }).join('');
+}
+
 /* ---------- HISTORY TAB ---------- */
 function renderHistory(){
   const el = document.getElementById('tab-history');
@@ -2060,25 +2158,15 @@ function renderHistory(){
   if(sales.length === 0){
     html += '<div class="empty-note">' + t('no_sales_rec') + '</div>';
   }else{
-    html += sales.map(s => {
-      const d = new Date(s.timestamp);
-      const timeStr = d.toLocaleDateString(locale(), {month:'short', day:'numeric'}) + ' · ' + d.toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
-      const itemsStr = s.items.map(i => {
-        const wasDiscounted = i.originalPrice && Math.abs(i.originalPrice - i.price) > 0.001;
-        return `${i.name} x${fmtQty(i.qty)}` + (wasDiscounted ? ' (' + t('disc_to', {price: PESO(i.price)}) + ')' : '');
-      }).join(', ');
-      return `<div class="sale-card">
-        <div class="sale-top">
-          <span class="sale-time">${timeStr}</span>
-          <span class="sale-total">${PESO(s.total)}</span>
-        </div>
-        <div class="sale-items">${escapeHtml(itemsStr)}</div>
-        ${s.discount ? `<div style="font-size:11px;color:var(--coral-dark);margin-top:4px;font-weight:700;">${t('disc_given', {amt: PESO(s.discount)})}</div>` : ''}
-      </div>`;
-    }).join('');
+    html += historyDaysHtml();
   }
   html += backupCardHtml();
   el.innerHTML = html;
+  el.querySelectorAll('.day-head').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.day;
+    if(openDays.has(k)) openDays.delete(k); else openDays.add(k);
+    renderHistory();
+  }));
   bindBackupHandlers(el);
 }
 
@@ -2633,6 +2721,20 @@ async function init(){
   document.getElementById('langModal').addEventListener('click', (e) => {
     if(e.target.id === 'langModal' && !langFirstRun) closeLangModal();
   });
+  let lastDay = dkey(new Date());
+  const checkDay = () => {
+    const k = dkey(new Date());
+    if(k === lastDay) return;
+    lastDay = k;
+    openDays.add(k);
+    setTodayDate(); updateTodayHeader();
+    if(currentTab === 'sell') renderSell();
+    if(currentTab === 'history') renderHistory();
+    if(currentTab === 'expenses') renderExpenses();
+    if(currentTab === 'trends') renderTrends();
+  };
+  setInterval(checkDay, 30000);
+  document.addEventListener('visibilitychange', () => { if(!document.hidden) checkDay(); });
   applyStaticI18n();
 
   if(!langStored && sales.length === 0) openLangModal(true);
