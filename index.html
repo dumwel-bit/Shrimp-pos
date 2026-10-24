@@ -187,6 +187,12 @@
   }
   .cart-row .info{flex:1;}
   .cart-row .cname{font-weight:700;font-size:14px;}
+  .sale-note{font-size:12px;color:var(--ink-soft);margin-top:6px;}
+  .sale-note button{background:none;border:none;color:var(--coral-dark);font-weight:700;font-size:12px;cursor:pointer;padding:2px 4px;}
+  .note-edit{display:flex;gap:6px;margin-top:6px;}
+  .note-edit input{flex:1;min-width:0;padding:8px;border-radius:8px;border:1px solid var(--line);font-size:13px;}
+  .note-edit button{padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;font-weight:700;font-size:12px;cursor:pointer;}
+  .note-edit .noteSave{background:var(--coral);color:#fff;border-color:var(--coral);}
   .line-note{font-size:11px;font-weight:600;color:var(--ink-soft);background:#EFE7D2;border-radius:8px;padding:2px 7px;margin-left:4px;}
   .cart-row .cline{font-size:12px;color:var(--ink-soft);margin-top:2px;font-variant-numeric:tabular-nums;}
   .cart-row .cline .strike{text-decoration:line-through;color:#B0A78F;}
@@ -500,6 +506,10 @@
     <button id="clearCartBtnModal" style="width:100%;padding:10px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--red);font-size:13px;font-weight:700;cursor:pointer;margin-top:4px;" data-i18n="cancel_order">Cancel whole order</button>
     <div class="summary-block">
       <div class="summary-line total"><span data-i18n="total">Total</span><span id="modalTotal">₱0</span></div>
+      <div class="cash-row" style="margin-bottom:10px;">
+        <label for="orderNote" data-i18n="note_label">Order note (optional)</label>
+        <input type="text" id="orderNote" maxlength="120" data-i18n-ph="note_ph" placeholder="e.g. customer name, for restaurant">
+      </div>
       <div class="cash-row">
         <label for="cashInput" data-i18n="cash_label">Cash received (optional — leave blank if paid exact)</label>
         <input type="number" id="cashInput" inputmode="decimal" placeholder="0.00">
@@ -838,6 +848,10 @@ const ROWS = [
 ['hd_left',"Left","Natira","Nabilin"],
 ['line_amt',"{amt} worth","{amt} na halaga","{amt} nga bili"],
 ['hd_restocks',"Restocks","Mga restock","Mga restock"],
+['note_label',"Order note (optional)","Tala sa order (opsyonal)","Nota sang order (opsyonal)"],
+['note_ph',"e.g. customer name, for restaurant","hal. pangalan ng suki, para sa restawran","pananglitan: ngalan sang suki, para sa restawran"],
+['add_note',"Add note","Magdagdag ng tala","Dugang nota"],
+['starting_stock',"Starting stock","Panimulang stock","Pangunang stock"],
 ['bk_title',"Backup and restore","Backup at pagbabalik","Backup kag pagbalik"],
 ['bk_none',"You have not saved a backup yet.","Wala ka pang na-save na backup.","Wala ka pa sing natipig nga backup."],
 ['bk_last',"Last backup: {date} at {time}","Huling backup: {date} nang {time}","Katapusan nga backup: {date} sang {time}"],
@@ -937,6 +951,7 @@ async function loadLang(){
 
 function applyStaticI18n(){
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
   document.documentElement.lang = LANG;
   const lb = document.getElementById('langBtn');
   if(lb){ lb.textContent = LANG_CODES[LANG]; lb.setAttribute('aria-label', t('lang_aria')); }
@@ -1387,10 +1402,12 @@ async function completeSale(){
     items,
     total,
     discount: discountTotal > 0.001 ? discountTotal : 0,
+    note: (document.getElementById('orderNote').value || '').trim(),
     cash: cashVal,
     change: cashVal - total
   };
   sales.unshift(sale);
+  document.getElementById('orderNote').value = '';
   await saveSales();
   entries.forEach(([id,c]) => {
     const p = products.find(x => x.id === (c.pid || id));
@@ -1702,8 +1719,15 @@ function showProductForm(){
     }else{
       const np = {id: uid(), name, price, unit, costPrice: finalCost, stock: finalStock, lowStock: finalLowStock};
       products.push(np);
+      let startPu = null;
+      if(finalStock > 0){
+        startPu = {id: uid(), timestamp: new Date().toISOString(), productId: np.id, productName: name, qty: finalStock, costPerUnit: finalCost, totalCost: finalStock * finalCost, initial: true};
+        purchases.unshift(startPu);
+        await savePurchases();
+      }
       undoFn = async () => {
         products = products.filter(x => x.id !== np.id); takeCartLines(np.id);
+        if(startPu){ purchases = purchases.filter(x => x.id !== startPu.id); await savePurchases(); }
         await saveProducts(); renderProducts(); renderSell(); updateCartBar();
       };
     }
@@ -1767,7 +1791,7 @@ function renderInventory(){
       const when = d.toLocaleDateString(locale(), {month:'short', day:'numeric'}) + ' · ' + d.toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
       const line = t('restock_line', {qty: fmtQty(pu.qty), unit: pr ? unitWord(pr.unit) : '', cost: PESO(pu.costPerUnit), total: PESO(pu.totalCost)});
       return `<div class="stock-row" data-pid="${pu.id}">
-        <div class="info"><div class="sname">${escapeHtml(pu.productName)}</div><div class="smeta">${escapeHtml(when)}<br>${escapeHtml(line)}</div></div>
+        <div class="info"><div class="sname">${escapeHtml(pu.productName)}${pu.initial ? ' <span class="line-note">' + t('starting_stock') + '</span>' : ''}</div><div class="smeta">${escapeHtml(when)}<br>${escapeHtml(line)}</div></div>
         <div style="display:flex;flex-direction:column;gap:6px;">
           <button class="restock-btn pu-edit" data-pid="${pu.id}">${t('edit')}</button>
           <button class="restock-btn pu-del" data-pid="${pu.id}" style="background:#fff;color:var(--red);border:1px solid var(--red);">${t('remove')}</button>
@@ -2067,6 +2091,7 @@ function renderExpenses(){
 }
 
 /* ---------- DAILY HISTORY ---------- */
+let editingNoteId = null;
 let openDays = new Set([dkey(new Date())]);
 let openDaysTouched = false;
 function dayTitle(key){
@@ -2125,6 +2150,9 @@ function historyDaysHtml(){
         return `<div class="sale-card">
           <div class="sale-top"><span class="sale-time">${timeStr}</span><span class="sale-total">${PESO(s.total)}</span></div>
           <div class="sale-items">${escapeHtml(itemsStr)}</div>
+          ${editingNoteId === s.id
+            ? `<div class="note-edit"><input type="text" maxlength="120" class="noteInput" value="${escapeHtml(s.note || '')}" placeholder="${escapeHtml(t('note_ph'))}"><button class="noteSave" data-sid="${s.id}">${t('save_price')}</button><button class="noteCancel">${t('cancel')}</button></div>`
+            : `<div class="sale-note">${s.note ? '📝 ' + escapeHtml(s.note) + ' ' : ''}<button class="noteEdit" data-sid="${s.id}">${s.note ? t('edit') : t('add_note')}</button></div>`}
           ${s.discount ? `<div style="font-size:11px;color:var(--coral-dark);margin-top:4px;font-weight:700;">${t('disc_given', {amt: PESO(s.discount)})}</div>` : ''}
         </div>`;
       }).join('') || `<div class="t-sub" style="margin:6px 2px;">${t('hd_nosales')}</div>`;
@@ -2133,7 +2161,7 @@ function historyDaysHtml(){
           const pr = products.find(x => x.id === pu.productId);
           const tm = new Date(pu.timestamp).toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
           const line = t('restock_line', {qty: fmtQty(pu.qty), unit: pr ? unitWord(pr.unit) : '', cost: PESO(pu.costPerUnit), total: PESO(pu.totalCost)});
-          return `<div class="sale-card" style="border-left:4px solid var(--green);"><div class="sale-top"><span class="sale-time">${escapeHtml(tm)} · ${escapeHtml(pu.productName)}</span><span class="sale-total" style="color:var(--red);">-${PESO(pu.totalCost)}</span></div><div class="sale-items">${escapeHtml(line)}</div></div>`;
+          return `<div class="sale-card" style="border-left:4px solid var(--green);"><div class="sale-top"><span class="sale-time">${escapeHtml(tm)} · ${escapeHtml(pu.productName)}${pu.initial ? ' <span class="line-note">' + t('starting_stock') + '</span>' : ''}</span><span class="sale-total" style="color:var(--red);">-${PESO(pu.totalCost)}</span></div><div class="sale-items">${escapeHtml(line)}</div></div>`;
         }).join('');
       }
       const ids = [...new Set([...Object.keys(dd.sold), ...Object.keys(dd.added)])];
@@ -2180,6 +2208,14 @@ function renderHistory(){
     const k = b.dataset.day;
     if(openDays.has(k)) openDays.delete(k); else openDays.add(k);
     renderHistory();
+  }));
+  el.querySelectorAll('.noteEdit').forEach(b => b.addEventListener('click', () => { editingNoteId = b.dataset.sid; renderHistory(); }));
+  el.querySelectorAll('.noteCancel').forEach(b => b.addEventListener('click', () => { editingNoteId = null; renderHistory(); }));
+  el.querySelectorAll('.noteSave').forEach(b => b.addEventListener('click', async () => {
+    const sale = sales.find(x => x.id === b.dataset.sid);
+    if(sale) sale.note = b.parentElement.querySelector('.noteInput').value.trim();
+    editingNoteId = null;
+    await saveSales(); renderHistory();
   }));
   bindBackupHandlers(el);
 }
