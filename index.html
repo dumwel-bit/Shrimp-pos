@@ -187,6 +187,7 @@
   }
   .cart-row .info{flex:1;}
   .cart-row .cname{font-weight:700;font-size:14px;}
+  .line-note{font-size:11px;font-weight:600;color:var(--ink-soft);background:#EFE7D2;border-radius:8px;padding:2px 7px;margin-left:4px;}
   .cart-row .cline{font-size:12px;color:var(--ink-soft);margin-top:2px;font-variant-numeric:tabular-nums;}
   .cart-row .cline .strike{text-decoration:line-through;color:#B0A78F;}
   .editPrice{
@@ -835,6 +836,8 @@ const ROWS = [
 ['hd_sold',"Sold","Naibenta","Nabaligya"],
 ['hd_added',"Added","Idinagdag","Gindugang"],
 ['hd_left',"Left","Natira","Nabilin"],
+['line_amt',"{amt} worth","{amt} na halaga","{amt} nga bili"],
+['hd_restocks',"Restocks","Mga restock","Mga restock"],
 ['bk_title',"Backup and restore","Backup at pagbabalik","Backup kag pagbalik"],
 ['bk_none',"You have not saved a backup yet.","Wala ka pang na-save na backup.","Wala ka pa sing natipig nga backup."],
 ['bk_last',"Last backup: {date} at {time}","Huling backup: {date} nang {time}","Katapusan nga backup: {date} sang {time}"],
@@ -1012,7 +1015,17 @@ let purchases = [];
 let expenses = [];
 let editingExpenseId = null;
 let showExpenseForm = false;
-let cart = {};
+let cart = {};   // key = line id; each line has pid (product id)
+function cartQtyFor(pid){ return Object.values(cart).reduce((a,c) => a + (c.pid === pid ? c.qty : 0), 0); }
+function newLine(p, key, extra){
+  cart[key] = Object.assign({pid:p.id, qty:0, price:curPrice(p), originalPrice:p.price, costPrice:p.costPrice||0, name:p.name, unit:p.unit}, extra || {});
+  return cart[key];
+}
+function takeCartLines(pid){
+  const out = {};
+  Object.keys(cart).forEach(k => { if(cart[k].pid === pid){ out[k] = cart[k]; delete cart[k]; } });
+  return out;
+}
 let editingProductId = null;
 let dataReady = false;
 
@@ -1107,7 +1120,7 @@ function renderSell(){
     el.innerHTML = '<div class="empty-note">' + t('no_products') + '</div>';
   }else{
     el.innerHTML = '<div class="product-grid">' + products.map(p => {
-      const qty = cart[p.id] ? cart[p.id].qty : 0;
+      const qty = cartQtyFor(p.id);
       const low = p.stock <= p.lowStock;
       const out = p.stock <= 0;
       return `<div class="product-card" data-id="${p.id}">
@@ -1148,13 +1161,14 @@ function renderSell(){
 function addToCart(id){
   const p = products.find(x => x.id === id);
   if(!p) return;
-  if(!cart[id]) cart[id] = {qty:0, price:curPrice(p), originalPrice:p.price, costPrice:p.costPrice||0, name:p.name, unit:p.unit};
-  cart[id].qty += 1;
+  const key = 'tap:' + id;
+  if(!cart[key]) newLine(p, key);
+  cart[key].qty += 1;
   renderSell();
   showUndoToast(t('added_item', {name:p.name, unit:unitLabel(p.unit)}), () => {
-    if(cart[id]){
-      cart[id].qty -= 1;
-      if(cart[id].qty <= 0) delete cart[id];
+    if(cart[key]){
+      cart[key].qty -= 1;
+      if(cart[key].qty <= 0) delete cart[key];
     }
     renderSell();
   });
@@ -1280,7 +1294,7 @@ function renderCartModal(){
           </div>`;
       return `<div class="cart-row" data-id="${id}">
         <div class="info">
-          <div class="cname">${escapeHtml(c.name)} ${discounted ? '<span class="discount-badge">' + t('discounted') + '</span>' : ''}</div>
+          <div class="cname">${escapeHtml(c.name)} ${c.note ? '<span class="line-note">' + escapeHtml(c.note) + '</span>' : ''} ${discounted ? '<span class="discount-badge">' + t('discounted') + '</span>' : ''}</div>
           ${priceArea}
         </div>
         ${isEditing ? '' : `<div class="stepper">
@@ -1363,7 +1377,7 @@ async function completeSale(){
   const {total} = cartCountAndTotal();
   if(total <= 0) return;
   const entries = Object.entries(cart).filter(([id,c]) => c.qty > 0);
-  const items = entries.map(([id,c]) => ({productId:id, name:c.name, unit:c.unit, price:c.price, originalPrice:c.originalPrice || c.price, costPrice:c.costPrice||0, qty:c.qty}));
+  const items = entries.map(([id,c]) => ({productId:c.pid || id, name:c.name, unit:c.unit, price:c.price, originalPrice:c.originalPrice || c.price, costPrice:c.costPrice||0, qty:c.qty}));
   const discountTotal = items.reduce((sum,i) => sum + ((i.originalPrice - i.price) * i.qty), 0);
   const raw = document.getElementById('cashInput').value;
   const cashVal = raw === '' ? total : (parseFloat(raw) || total);
@@ -1379,7 +1393,7 @@ async function completeSale(){
   sales.unshift(sale);
   await saveSales();
   entries.forEach(([id,c]) => {
-    const p = products.find(x => x.id === id);
+    const p = products.find(x => x.id === (c.pid || id));
     if(p) p.stock = Math.round((p.stock - c.qty) * 1000) / 1000;
   });
   await saveProducts();
@@ -1442,16 +1456,12 @@ function addByAmount(){
     return;
   }
   const qty = val / curPrice(p);
-  if(!cart[p.id]) cart[p.id] = {qty:0, price:curPrice(p), originalPrice:p.price, costPrice:p.costPrice||0, name:p.name, unit:p.unit};
-  cart[p.id].qty += qty;
+  const key = 'ln' + uid();
+  newLine(p, key, {qty, note: t('line_amt', {amt: PESO(val)})});
   closeAmountModal();
   renderSell();
-  const pid = p.id;
   showUndoToast(t('added_amt', {amt: PESO(val), name: p.name}), () => {
-    if(cart[pid]){
-      cart[pid].qty -= qty;
-      if(cart[pid].qty <= 0.0001) delete cart[pid];
-    }
+    delete cart[key];
     renderSell();
   });
 }
@@ -1524,16 +1534,12 @@ function addByWeight(){
   const kg = weightInKg();
   if(kg === null){ err.textContent = t('valid_weight'); return; }
   const qty = Math.round(kg * 1000) / 1000;
-  if(!cart[p.id]) cart[p.id] = {qty:0, price:curPrice(p), originalPrice:p.price, costPrice:p.costPrice||0, name:p.name, unit:p.unit};
-  cart[p.id].qty += qty;
+  const key = 'ln' + uid();
+  newLine(p, key, {qty});
   closeWeightModal();
   renderSell();
-  const pid = p.id;
   showUndoToast(t('added_weight', {qty: fmtQty(qty), name: p.name}), () => {
-    if(cart[pid]){
-      cart[pid].qty -= qty;
-      if(cart[pid].qty <= 0.0001) delete cart[pid];
-    }
+    delete cart[key];
     renderSell();
   });
 }
@@ -1583,11 +1589,11 @@ function applyPrice(permanent){
   if(permanent){
     p.price = v;
     delete sessionPrice[p.id];
-    if(cart[p.id]){ cart[p.id].originalPrice = v; cart[p.id].price = v; }
+    Object.values(cart).forEach(c => { if(c.pid === p.id){ c.originalPrice = v; c.price = v; } });
     saveProducts();
   }else{
     sessionPrice[p.id] = v;
-    if(cart[p.id]) cart[p.id].price = v;
+    Object.values(cart).forEach(c => { if(c.pid === p.id) c.price = v; });
   }
   closePriceModal();
   renderSell();
@@ -1627,15 +1633,14 @@ function renderProducts(){
       const idx = products.findIndex(p => p.id === id);
       if(idx < 0) return;
       const removed = products[idx];
-      const removedCart = cart[id];
+      const removedCart = takeCartLines(id);
       products = products.filter(p => p.id !== id);
-      delete cart[id];
       await saveProducts();
       renderProducts();
       renderSell();
       showUndoToast(t('u_prod_deleted', {name: removed.name}), async () => {
         products.splice(Math.min(idx, products.length), 0, removed);
-        if(removedCart) cart[id] = removedCart;
+        Object.assign(cart, removedCart);
         await saveProducts();
         renderProducts(); renderSell(); updateCartBar();
       }, 8000);
@@ -1698,7 +1703,7 @@ function showProductForm(){
       const np = {id: uid(), name, price, unit, costPrice: finalCost, stock: finalStock, lowStock: finalLowStock};
       products.push(np);
       undoFn = async () => {
-        products = products.filter(x => x.id !== np.id); delete cart[np.id];
+        products = products.filter(x => x.id !== np.id); takeCartLines(np.id);
         await saveProducts(); renderProducts(); renderSell(); updateCartBar();
       };
     }
@@ -1756,7 +1761,7 @@ function renderInventory(){
   }
   if(purchases.length){
     html += `<div class="section-label">${t('recent_restocks')}</div><div class="t-sub" style="margin:-4px 2px 8px;">${t('recent_hint')}</div>`;
-    html += purchases.slice(0, 10).map(pu => {
+    html += purchases.slice(0, 30).map(pu => {
       const pr = products.find(x => x.id === pu.productId);
       const d = new Date(pu.timestamp);
       const when = d.toLocaleDateString(locale(), {month:'short', day:'numeric'}) + ' · ' + d.toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
@@ -2077,7 +2082,7 @@ function dayTitle(key){
 function historyDaysHtml(){
   const r3 = v => Math.round(v * 1000) / 1000;
   const days = {};
-  const get = k => days[k] || (days[k] = {sales:[], total:0, sold:{}, added:{}});
+  const get = k => days[k] || (days[k] = {sales:[], pur:[], total:0, sold:{}, added:{}});
   sales.forEach(s => {
     const k = dkey(new Date(s.timestamp)); const dd = get(k);
     dd.sales.push(s); dd.total += s.total;
@@ -2088,6 +2093,7 @@ function historyDaysHtml(){
   });
   purchases.forEach(pu => {
     const k = dkey(new Date(pu.timestamp)); const dd = get(k);
+    dd.pur.push(pu);
     const o = dd.added[pu.productId] || (dd.added[pu.productId] = {name:pu.productName, qty:0});
     o.qty += pu.qty;
   });
@@ -2122,6 +2128,14 @@ function historyDaysHtml(){
           ${s.discount ? `<div style="font-size:11px;color:var(--coral-dark);margin-top:4px;font-weight:700;">${t('disc_given', {amt: PESO(s.discount)})}</div>` : ''}
         </div>`;
       }).join('') || `<div class="t-sub" style="margin:6px 2px;">${t('hd_nosales')}</div>`;
+      if(dd.pur.length){
+        h += `<div class="ds-title" style="margin:10px 2px 6px;">${t('hd_restocks')}</div>` + dd.pur.slice().sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).map(pu => {
+          const pr = products.find(x => x.id === pu.productId);
+          const tm = new Date(pu.timestamp).toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
+          const line = t('restock_line', {qty: fmtQty(pu.qty), unit: pr ? unitWord(pr.unit) : '', cost: PESO(pu.costPerUnit), total: PESO(pu.totalCost)});
+          return `<div class="sale-card" style="border-left:4px solid var(--green);"><div class="sale-top"><span class="sale-time">${escapeHtml(tm)} · ${escapeHtml(pu.productName)}</span><span class="sale-total" style="color:var(--red);">-${PESO(pu.totalCost)}</span></div><div class="sale-items">${escapeHtml(line)}</div></div>`;
+        }).join('');
+      }
       const ids = [...new Set([...Object.keys(dd.sold), ...Object.keys(dd.added)])];
       h += `<div class="day-stock"><div class="ds-title">${t('hd_stock')}</div>
         <div class="ds-row ds-hd"><span>&nbsp;</span><span>${t('hd_sold')}</span><span>${t('hd_added')}</span><span>${t('hd_left')}</span></div>` +
