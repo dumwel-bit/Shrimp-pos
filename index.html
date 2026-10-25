@@ -296,9 +296,13 @@
   .day-head .dh-r i{font-style:normal;font-size:10px;color:var(--ink-soft);margin-left:8px;}
   .day-stock{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;}
   .ds-title{font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;}
-  .ds-row{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:6px;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--line);align-items:baseline;}
+  .ds-row{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr;gap:6px;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--line);align-items:baseline;}
   .ds-row:last-child{border-bottom:none;}
   .ds-row span:not(:first-child){text-align:right;font-variant-numeric:tabular-nums;}
+  .ds-sumrow{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;}
+  .ds-sumrow.pos b{color:var(--green);}
+  .ds-sumrow.neg b{color:var(--red);}
+  .ds-sep{border-top:1px dashed var(--line);margin:6px 0;}
   .ds-hd{font-size:11px;color:var(--ink-soft);font-weight:600;}
   .sale-card{
     background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;
@@ -597,6 +601,30 @@
   </div>
 </div>
 
+<div class="modal-overlay hidden" id="returnModal">
+  <div class="modal-sheet">
+    <div class="modal-title">
+      <span id="returnModalTitle">Return stock</span>
+      <span class="close" id="closeReturn">&times;</span>
+    </div>
+    <div class="cash-row">
+      <label for="returnQty" data-i18n="ret_qty">Quantity returned</label>
+      <input type="number" id="returnQty" inputmode="decimal" placeholder="0">
+    </div>
+    <div class="cash-row">
+      <label for="returnRefund" data-i18n="ret_refund">Refund per unit (put 0 if not refunded)</label>
+      <input type="number" id="returnRefund" inputmode="decimal" placeholder="0.00">
+    </div>
+    <div class="cash-row">
+      <label for="returnNote" data-i18n="ret_note">Reason / note (optional)</label>
+      <input type="text" id="returnNote" maxlength="120" data-i18n-ph="ret_note_ph" placeholder="e.g. unsold, returned to main stall">
+    </div>
+    <div class="amt-preview" id="returnPreview"></div>
+    <div id="returnError" style="color:var(--red);font-size:12px;margin-top:8px;"></div>
+    <button class="complete-btn" id="returnSaveBtn" data-i18n="ret_confirm">Return stock</button>
+  </div>
+</div>
+
 <div class="modal-overlay hidden" id="langModal">
   <div class="modal-sheet">
     <div class="modal-title">
@@ -841,7 +869,7 @@ const ROWS = [
 ['hd_yday',"Yesterday","Kahapon","Kahapon"],
 ['hd_orders_one',"{n} order","{n} order","{n} ka order"],
 ['hd_orders_many',"{n} orders","{n} order","{n} ka order"],
-['hd_nosales',"No sales this day (stock was added).","Walang benta sa araw na ito (may nadagdag na stock).","Wala sing baligya sa sini nga adlaw (may nadugang nga stock)."],
+['hd_nosales',"No sales this day.","Walang benta sa araw na ito.","Wala sing baligya sa sini nga adlaw."],
 ['hd_stock',"Stock for this day","Stock sa araw na ito","Stock sa sini nga adlaw"],
 ['hd_sold',"Sold","Naibenta","Nabaligya"],
 ['hd_added',"Added","Idinagdag","Gindugang"],
@@ -852,6 +880,41 @@ const ROWS = [
 ['note_ph',"e.g. customer name, for restaurant","hal. pangalan ng suki, para sa restawran","pananglitan: ngalan sang suki, para sa restawran"],
 ['add_note',"Add note","Magdagdag ng tala","Dugang nota"],
 ['starting_stock',"Starting stock","Panimulang stock","Pangunang stock"],
+['ret_btn',"Return","Ibalik","Ibalik"],
+['ret_title',"Return stock: {name}","Ibalik ang stock: {name}","Ibalik ang stock: {name}"],
+['ret_qty',"Quantity returned","Dami na ibinalik","Kadamuon nga ginbalik"],
+['ret_refund',"Refund per unit (put 0 if not refunded)","Refund bawat yunit (0 kung walang refund)","Refund kada yunit (0 kon wala refund)"],
+['ret_note',"Reason / note (optional)","Dahilan / tala (opsyonal)","Rason / nota (opsyonal)"],
+['ret_note_ph',"e.g. unsold, returned to main stall","hal. hindi naibenta, ibinalik sa main stall","pananglitan: wala nabaligya, ginbalik sa main stall"],
+['ret_confirm',"Return stock","Ibalik ang stock","Ibalik ang stock"],
+['ret_hint',"Enter how much you are returning.","Ilagay kung gaano karami ang ibabalik.","Isulod kon pila ang ibalik."],
+['ret_preview',"Returning {qty} {unit} · refund {refund} · loss {loss} · stock after: {stock}","Ibinabalik {qty} {unit} · refund {refund} · lugi {loss} · stock pagkatapos: {stock}","Ginabalik {qty} {unit} · refund {refund} · lugi {loss} · stock pagkatapos: {stock}"],
+['ret_err_qty',"Enter a quantity that is not more than your stock.","Maglagay ng dami na hindi lalampas sa stock mo.","Isulod ang kadamuon nga indi molapas sa stock mo."],
+['ret_err_refund',"Enter a valid refund (0 or more).","Maglagay ng tamang refund (0 o higit pa).","Isulod ang husto nga refund (0 ukon labaw pa)."],
+['u_returned',"Returned {qty} {unit} of {name}","Naibalik ang {qty} {unit} ng {name}","Nabalik ang {qty} {unit} sang {name}"],
+['u_ret_removed',"Return removed","Naalis ang pagbabalik","Nakuha ang pagbalik"],
+['recent_returns',"Recent returns","Mga huling ibinalik","Mga ulihi nga ginbalik"],
+['ret_line',"−{qty} {unit} · refund {refund} · loss {loss}","−{qty} {unit} · refund {refund} · lugi {loss}","−{qty} {unit} · refund {refund} · lugi {loss}"],
+['hd_returns',"Returns","Mga ibinalik","Mga ginbalik"],
+['hd_returned',"Returned","Ibinalik","Ginbalik"],
+['fin_ret_loss',"Loss on returned stock","Lugi sa ibinalik na stock","Lugi sa ginbalik nga stock"],
+['td_title',"Today","Ngayon","Subong"],
+['td_overall',"Overall (all time)","Kabuuan (lahat ng araw)","Tanan (tanan nga adlaw)"],
+['td_sales',"Sales today","Benta ngayon","Baligya subong"],
+['td_net',"Net income today","Netong kita ngayon","Neto nga kita subong"],
+['td_capital',"Capital spent today (restocks)","Puhunang nagastos ngayon (restock)","Puhunan nga nagasto subong (restock)"],
+['td_exp',"Expenses today","Gastos ngayon","Gasto subong"],
+['hd_summary',"Daily income and capital","Kita at puhunan sa araw","Kita kag puhunan sa adlaw"],
+['hd_net',"Net {amt}","Neto {amt}","Neto {amt}"],
+['ds_sales',"Sales","Benta","Baligya"],
+['ds_cogs',"Cost of goods sold","Puhunan ng naibenta","Puhunan sang nabaligya"],
+['ds_gross',"Gross profit","Kita bago gastos","Kita antes gasto"],
+['ds_exp',"Expenses","Gastos","Gasto"],
+['ds_retloss',"Loss on returns","Lugi sa ibinalik","Lugi sa ginbalik"],
+['ds_net',"Net income","Netong kita","Neto nga kita"],
+['ds_restock',"Capital spent (restocks)","Puhunang nagastos (restock)","Puhunan nga nagasto (restock)"],
+['ds_refund',"Refunds received","Natanggap na refund","Nabaton nga refund"],
+['ds_stockval',"Stock value at end of day","Halaga ng stock sa katapusan ng araw","Bili sang stock sa katapusan sang adlaw"],
 ['bk_title',"Backup and restore","Backup at pagbabalik","Backup kag pagbalik"],
 ['bk_none',"You have not saved a backup yet.","Wala ka pang na-save na backup.","Wala ka pa sing natipig nga backup."],
 ['bk_last',"Last backup: {date} at {time}","Huling backup: {date} nang {time}","Katapusan nga backup: {date} sang {time}"],
@@ -1028,6 +1091,7 @@ let products = [];
 let sales = [];
 let purchases = [];
 let expenses = [];
+let returns = [];
 let editingExpenseId = null;
 let showExpenseForm = false;
 let cart = {};   // key = line id; each line has pid (product id)
@@ -1075,6 +1139,10 @@ async function loadData(){
     expenses = ex ? JSON.parse(ex.value) : [];
   }catch(e){ expenses = []; }
   try{
+    const rt = await window.storage.get('returns-log', false);
+    returns = rt ? JSON.parse(rt.value) : [];
+  }catch(e){ returns = []; }
+  try{
     const lb = await window.storage.get('last-backup', false);
     lastBackup = (lb && lb.value) ? lb.value : null;
   }catch(e){ lastBackup = null; }
@@ -1091,6 +1159,10 @@ async function saveProducts(){
 async function saveSales(){
   try{ await window.storage.set('sales-log', JSON.stringify(sales), false); }
   catch(e){ console.error('Could not save sales', e); }
+}
+async function saveReturns(){
+  try{ await window.storage.set('returns-log', JSON.stringify(returns), false); }
+  catch(e){ console.error('Could not save returns', e); }
 }
 async function saveExpenses(){
   try{ await window.storage.set('expenses-log', JSON.stringify(expenses), false); }
@@ -1740,28 +1812,54 @@ function showProductForm(){
 }
 
 /* ---------- INVENTORY TAB ---------- */
+function retLoss(r){ return Math.max(0, r.qty * (r.costPerUnit || 0) - r.totalRefund); }
+function dayStats(key){
+  const same = ts => dkey(new Date(ts)) === key;
+  const ds = sales.filter(x => same(x.timestamp));
+  const revenue = ds.reduce((a,x) => a + x.total, 0);
+  const cogs = ds.reduce((a,x) => a + x.items.reduce((b,i) => b + (i.costPrice||0) * i.qty, 0), 0);
+  const exp = expenses.filter(x => same(x.timestamp)).reduce((a,x) => a + x.total, 0);
+  const rets = returns.filter(x => same(x.timestamp));
+  const loss = rets.reduce((a,x) => a + retLoss(x), 0);
+  const refunds = rets.reduce((a,x) => a + x.totalRefund, 0);
+  const capitalIn = purchases.filter(x => same(x.timestamp)).reduce((a,x) => a + x.totalCost, 0);
+  const gross = revenue - cogs;
+  return {orders: ds.length, revenue, cogs, gross, exp, loss, refunds, capitalIn, net: gross - exp - loss};
+}
 function computeFinancials(){
   const capitalInStock = products.reduce((sum,p) => sum + (p.stock * p.costPrice), 0);
-  const totalInvested = purchases.reduce((sum,pu) => sum + pu.totalCost, 0);
+  const refunds = returns.reduce((sum,r) => sum + r.totalRefund, 0);
+  const returnLoss = returns.reduce((sum,r) => sum + retLoss(r), 0);
+  const totalInvested = purchases.reduce((sum,pu) => sum + pu.totalCost, 0) - refunds;
   const grossRevenue = sales.reduce((sum,s) => sum + s.total, 0);
   const cogs = sales.reduce((sum,s) => sum + s.items.reduce((a,i) => a + (i.costPrice||0) * i.qty, 0), 0);
   const grossProfit = grossRevenue - cogs;
   const totalExpenses = expenses.reduce((sum,e) => sum + (e.total || 0), 0);
-  const netIncome = grossProfit - totalExpenses;
+  const netIncome = grossProfit - totalExpenses - returnLoss;
   const roi = totalInvested > 0 ? (netIncome / totalInvested) * 100 : null;
-  return {capitalInStock, totalInvested, grossRevenue, cogs, grossProfit, totalExpenses, netIncome, roi};
+  return {capitalInStock, totalInvested, grossRevenue, cogs, grossProfit, totalExpenses, returnLoss, refunds, netIncome, roi};
 }
 
 function renderInventory(){
   const el = document.getElementById('tab-inventory');
   const f = computeFinancials();
-  let html = `<div class="fin-grid">
+  const td = dayStats(dkey(new Date()));
+  let html = `<div class="section-label" style="margin-top:2px;">${t('td_title')}</div>
+  <div class="fin-grid">
+    <div class="fin-card accent"><div class="fl">${t('td_sales')}</div><div class="fv">${PESO(td.revenue)}</div></div>
+    <div class="fin-card ${td.net >= 0 ? 'positive' : 'negative'}"><div class="fl">${t('td_net')}</div><div class="fv">${PESO(td.net)}</div></div>
+    <div class="fin-card"><div class="fl">${t('td_capital')}</div><div class="fv">${PESO(td.capitalIn)}</div></div>
+    <div class="fin-card"><div class="fl">${t('td_exp')}</div><div class="fv">${PESO(td.exp)}</div></div>
+  </div>
+  <div class="section-label">${t('td_overall')}</div>
+  <div class="fin-grid">
     <div class="fin-card"><div class="fl">${t('fin_stock_value')}</div><div class="fv">${PESO(f.capitalInStock)}</div></div>
     <div class="fin-card"><div class="fl">${t('fin_invested')}</div><div class="fv">${PESO(f.totalInvested)}</div></div>
     <div class="fin-card accent"><div class="fl">${t('fin_revenue')}</div><div class="fv">${PESO(f.grossRevenue)}</div></div>
     <div class="fin-card"><div class="fl">${t('fin_cogs')}</div><div class="fv">${PESO(f.cogs)}</div></div>
     <div class="fin-card ${f.grossProfit >= 0 ? 'positive' : 'negative'}"><div class="fl">${t('fin_gross')}</div><div class="fv">${PESO(f.grossProfit)}</div></div>
     <div class="fin-card"><div class="fl">${t('fin_expenses')}</div><div class="fv">${PESO(f.totalExpenses)}</div></div>
+    ${f.returnLoss > 0 ? `<div class="fin-card negative" style="grid-column:1/-1;"><div class="fl">${t('fin_ret_loss')}</div><div class="fv">${PESO(f.returnLoss)}</div></div>` : ''}
     <div class="fin-card ${f.netIncome >= 0 ? 'positive' : 'negative'}"><div class="fl">${t('fin_net')}</div><div class="fv">${PESO(f.netIncome)}</div></div>
     <div class="fin-card ${f.roi === null ? '' : (f.roi >= 0 ? 'positive' : 'negative')}"><div class="fl">${t('fin_roi')}</div><div class="fv">${f.roi === null ? '—' : f.roi.toFixed(1) + '%'}</div></div>
   </div>
@@ -1779,7 +1877,10 @@ function renderInventory(){
           <div class="sname">${escapeHtml(p.name)} ${out ? '<span class="out-badge">' + t('out_of_stock') + '</span>' : (low ? '<span class="low-badge">' + t('low_stock') + '</span>' : '')}</div>
           <div class="smeta">${escapeHtml(t('on_hand', {qty: fmtQty(p.stock), unit: unitWord(p.unit), worth: PESO(p.stock * p.costPrice), cost: PESO(p.costPrice), perunit: unitLabel(p.unit)}))}</div>
         </div>
-        <button class="restock-btn" data-id="${p.id}">${t('restock')}</button>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <button class="restock-btn" data-id="${p.id}">${t('restock')}</button>
+          ${p.stock > 0 ? `<button class="restock-btn ret-btn" data-id="${p.id}" style="background:#fff;color:var(--ink);border:1px solid var(--line);">${t('ret_btn')}</button>` : ''}
+        </div>
       </div>`;
     }).join('');
   }
@@ -1798,9 +1899,23 @@ function renderInventory(){
         </div></div>`;
     }).join('');
   }
+  if(returns.length){
+    html += `<div class="section-label">${t('recent_returns')}</div>` + returns.slice(0, 15).map(r => {
+      const pr = products.find(x => x.id === r.productId);
+      const d = new Date(r.timestamp);
+      const when = d.toLocaleDateString(locale(), {month:'short', day:'numeric'}) + ' · ' + d.toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
+      const line = t('ret_line', {qty: fmtQty(r.qty), unit: pr ? unitWord(pr.unit) : '', refund: PESO(r.totalRefund), loss: PESO(retLoss(r))});
+      return `<div class="stock-row"><div class="info"><div class="sname">${escapeHtml(r.productName)}</div><div class="smeta">${escapeHtml(when)}<br>${escapeHtml(line)}${r.note ? '<br>📝 ' + escapeHtml(r.note) : ''}</div></div>
+        <button class="restock-btn ret-del" data-rid="${r.id}" style="background:#fff;color:var(--red);border:1px solid var(--red);">${t('remove')}</button></div>`;
+    }).join('');
+  }
   el.innerHTML = html;
 
-  el.querySelectorAll('.restock-btn:not(.pu-edit):not(.pu-del)').forEach(btn => {
+  el.querySelectorAll('.ret-del').forEach(btn => btn.addEventListener('click', () => removeReturn(btn.dataset.rid)));
+  el.querySelectorAll('.ret-btn').forEach(btn => {
+    btn.addEventListener('click', () => openReturnModal(btn.dataset.id));
+  });
+  el.querySelectorAll('.restock-btn:not(.pu-edit):not(.pu-del):not(.ret-btn)').forEach(btn => {
     btn.addEventListener('click', () => openRestockModal(btn.dataset.id));
   });
   el.querySelectorAll('.pu-edit').forEach(btn => {
@@ -2107,7 +2222,7 @@ function dayTitle(key){
 function historyDaysHtml(){
   const r3 = v => Math.round(v * 1000) / 1000;
   const days = {};
-  const get = k => days[k] || (days[k] = {sales:[], pur:[], total:0, sold:{}, added:{}});
+  const get = k => days[k] || (days[k] = {sales:[], pur:[], ret:[], total:0, sold:{}, added:{}, returned:{}});
   sales.forEach(s => {
     const k = dkey(new Date(s.timestamp)); const dd = get(k);
     dd.sales.push(s); dd.total += s.total;
@@ -2122,6 +2237,13 @@ function historyDaysHtml(){
     const o = dd.added[pu.productId] || (dd.added[pu.productId] = {name:pu.productName, qty:0});
     o.qty += pu.qty;
   });
+  returns.forEach(r => {
+    const dd = get(dkey(new Date(r.timestamp)));
+    dd.ret.push(r);
+    const o = dd.returned[r.productId] || (dd.returned[r.productId] = {name:r.productName, qty:0});
+    o.qty += r.qty;
+  });
+  expenses.forEach(e => get(dkey(new Date(e.timestamp))));
   const keys = Object.keys(days).sort().reverse();
   // stock left at end of each day = now - later restocks + later sales
   const left = {}; products.forEach(p => left[p.id] = p.stock);
@@ -2131,15 +2253,26 @@ function historyDaysHtml(){
     const dd = days[k];
     Object.entries(dd.added).forEach(([id,o]) => { if(id in left) left[id] = r3(left[id] - o.qty); });
     Object.entries(dd.sold).forEach(([id,o]) => { if(id in left) left[id] = r3(left[id] + o.qty); });
+    Object.entries(dd.returned).forEach(([id,o]) => { if(id in left) left[id] = r3(left[id] + o.qty); });
   });
   return keys.map(k => {
     const dd = days[k];
     const open = openDays.has(k);
     const n = dd.sales.length;
+    const st = dayStats(k);
     let h = `<div class="day-group"><button class="day-head" data-day="${k}">
-      <span class="dh-l"><b>${escapeHtml(dayTitle(k))}</b><small>${t(n === 1 ? 'hd_orders_one' : 'hd_orders_many', {n})}</small></span>
+      <span class="dh-l"><b>${escapeHtml(dayTitle(k))}</b><small>${t(n === 1 ? 'hd_orders_one' : 'hd_orders_many', {n})} · ${t('hd_net', {amt: PESO(st.net)})}</small></span>
       <span class="dh-r">${PESO(dd.total)}<i>${open ? '▲' : '▼'}</i></span></button>`;
     if(open){
+      const stockVal = products.reduce((a,pr) => a + Math.max(0, (leftByDay[k][pr.id] || 0)) * (pr.costPrice || 0), 0);
+      const row = (l, v, cls) => `<div class="ds-sumrow ${cls || ''}"><span>${l}</span><b>${v}</b></div>`;
+      h += `<div class="day-stock day-sum"><div class="ds-title">${t('hd_summary')}</div>` +
+        row(t('ds_sales'), PESO(st.revenue)) + row(t('ds_cogs'), '-' + PESO(st.cogs)) + row(t('ds_gross'), PESO(st.gross)) +
+        row(t('ds_exp'), '-' + PESO(st.exp)) + (st.loss > 0 ? row(t('ds_retloss'), '-' + PESO(st.loss)) : '') +
+        row(t('ds_net'), PESO(st.net), st.net >= 0 ? 'pos' : 'neg') +
+        `<div class="ds-sep"></div>` +
+        row(t('ds_restock'), PESO(st.capitalIn)) + (st.refunds > 0 ? row(t('ds_refund'), PESO(st.refunds)) : '') +
+        row(t('ds_stockval'), PESO(stockVal)) + `</div>`;
       h += dd.sales.map(s => {
         const d = new Date(s.timestamp);
         const timeStr = d.toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
@@ -2164,20 +2297,93 @@ function historyDaysHtml(){
           return `<div class="sale-card" style="border-left:4px solid var(--green);"><div class="sale-top"><span class="sale-time">${escapeHtml(tm)} · ${escapeHtml(pu.productName)}${pu.initial ? ' <span class="line-note">' + t('starting_stock') + '</span>' : ''}</span><span class="sale-total" style="color:var(--red);">-${PESO(pu.totalCost)}</span></div><div class="sale-items">${escapeHtml(line)}</div></div>`;
         }).join('');
       }
-      const ids = [...new Set([...Object.keys(dd.sold), ...Object.keys(dd.added)])];
+      if(dd.ret.length){
+        h += `<div class="ds-title" style="margin:10px 2px 6px;">${t('hd_returns')}</div>` + dd.ret.map(r => {
+          const pr = products.find(x => x.id === r.productId);
+          const tm = new Date(r.timestamp).toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
+          const line = t('ret_line', {qty: fmtQty(r.qty), unit: pr ? unitWord(pr.unit) : '', refund: PESO(r.totalRefund), loss: PESO(retLoss(r))});
+          return `<div class="sale-card" style="border-left:4px solid var(--coral);"><div class="sale-top"><span class="sale-time">${escapeHtml(tm)} · ${escapeHtml(r.productName)}</span><span class="sale-total">+${PESO(r.totalRefund)}</span></div><div class="sale-items">${escapeHtml(line)}${r.note ? ' · 📝 ' + escapeHtml(r.note) : ''}</div></div>`;
+        }).join('');
+      }
+      const ids = [...new Set([...Object.keys(dd.sold), ...Object.keys(dd.added), ...Object.keys(dd.returned)])];
       h += `<div class="day-stock"><div class="ds-title">${t('hd_stock')}</div>
-        <div class="ds-row ds-hd"><span>&nbsp;</span><span>${t('hd_sold')}</span><span>${t('hd_added')}</span><span>${t('hd_left')}</span></div>` +
+        <div class="ds-row ds-hd"><span>&nbsp;</span><span>${t('hd_sold')}</span><span>${t('hd_added')}</span><span>${t('hd_returned')}</span><span>${t('hd_left')}</span></div>` +
         ids.map(id => {
           const pr = products.find(x => x.id === id);
-          const nm = pr ? pr.name : ((dd.sold[id] || dd.added[id]).name);
+          const nm = pr ? pr.name : ((dd.sold[id] || dd.added[id] || dd.returned[id]).name);
+          const retq = dd.returned[id] ? '-' + fmtQty(dd.returned[id].qty) : '–';
           const sold = dd.sold[id] ? fmtQty(dd.sold[id].qty) : '–';
           const add = dd.added[id] ? '+' + fmtQty(dd.added[id].qty) : '–';
           const lf = (id in leftByDay[k]) ? fmtQty(Math.max(0, leftByDay[k][id])) : '–';
-          return `<div class="ds-row"><span>${escapeHtml(nm)}</span><span>${sold}</span><span>${add}</span><span><b>${lf}</b></span></div>`;
+          return `<div class="ds-row"><span>${escapeHtml(nm)}</span><span>${sold}</span><span>${add}</span><span>${retq}</span><span><b>${lf}</b></span></div>`;
         }).join('') + `</div>`;
     }
     return h + `</div>`;
   }).join('');
+}
+
+/* ---------- RETURNS ---------- */
+let returnProductId = null;
+function openReturnModal(id){
+  const p = products.find(x => x.id === id);
+  if(!p) return;
+  returnProductId = id;
+  document.getElementById('returnModalTitle').textContent = t('ret_title', {name: p.name});
+  document.getElementById('returnQty').value = '';
+  document.getElementById('returnRefund').value = p.costPrice || 0;
+  document.getElementById('returnNote').value = '';
+  document.getElementById('returnError').textContent = '';
+  updateReturnPreview();
+  document.getElementById('returnModal').classList.remove('hidden');
+}
+function closeReturnModal(){
+  document.getElementById('returnModal').classList.add('hidden');
+  returnProductId = null;
+}
+function updateReturnPreview(){
+  const p = products.find(x => x.id === returnProductId);
+  const pv = document.getElementById('returnPreview');
+  const q = parseFloat(document.getElementById('returnQty').value);
+  const rf = parseFloat(document.getElementById('returnRefund').value);
+  if(!p || isNaN(q) || q <= 0 || isNaN(rf) || rf < 0){ pv.innerHTML = t('ret_hint'); return; }
+  const refund = q * rf, loss = Math.max(0, q * (p.costPrice || 0) - refund);
+  pv.innerHTML = t('ret_preview', {qty: '<span class="qv2">' + fmtQty(q) + '</span>', unit: escapeHtml(unitWord(p.unit)), refund: '<span class="qv2">' + PESO(refund) + '</span>', loss: '<span class="qv2">' + PESO(loss) + '</span>', stock: '<span class="qv2">' + fmtQty(Math.max(0, p.stock - q)) + '</span>'});
+}
+async function submitReturn(){
+  const p = products.find(x => x.id === returnProductId);
+  if(!p) return;
+  const err = document.getElementById('returnError');
+  const q = Math.round(parseFloat(document.getElementById('returnQty').value) * 1000) / 1000;
+  const rf = parseFloat(document.getElementById('returnRefund').value);
+  if(isNaN(q) || q <= 0 || q > p.stock + 0.0001){ err.textContent = t('ret_err_qty'); return; }
+  if(isNaN(rf) || rf < 0){ err.textContent = t('ret_err_refund'); return; }
+  const r = {id: uid(), timestamp: new Date().toISOString(), productId: p.id, productName: p.name, qty: q, costPerUnit: p.costPrice || 0, refundPerUnit: rf, totalRefund: Math.round(q * rf * 100) / 100, note: document.getElementById('returnNote').value.trim()};
+  returns.unshift(r);
+  p.stock = Math.max(0, Math.round((p.stock - q) * 1000) / 1000);
+  await saveProducts(); await saveReturns();
+  closeReturnModal(); renderInventory(); renderSell();
+  showUndoToast(t('u_returned', {qty: fmtQty(q), unit: unitWord(p.unit), name: p.name}), async () => {
+    await undoReturn(r.id);
+  }, 8000);
+}
+async function undoReturn(rid){
+  const idx = returns.findIndex(x => x.id === rid);
+  if(idx < 0) return null;
+  const r = returns.splice(idx, 1)[0];
+  const pr = products.find(x => x.id === r.productId);
+  if(pr) pr.stock = Math.round((pr.stock + r.qty) * 1000) / 1000;
+  await saveProducts(); await saveReturns(); renderInventory(); renderSell();
+  return {r, idx};
+}
+async function removeReturn(rid){
+  const res = await undoReturn(rid);
+  if(!res) return;
+  showUndoToast(t('u_ret_removed'), async () => {
+    returns.splice(Math.min(res.idx, returns.length), 0, res.r);
+    const pr = products.find(x => x.id === res.r.productId);
+    if(pr) pr.stock = Math.max(0, Math.round((pr.stock - res.r.qty) * 1000) / 1000);
+    await saveProducts(); await saveReturns(); renderInventory(); renderSell();
+  }, 8000);
 }
 
 /* ---------- HISTORY TAB ---------- */
@@ -2265,7 +2471,7 @@ function backupCardHtml(){
 function bindBackupHandlers(el){
   const msg = el.querySelector('#backupMsg');
   el.querySelector('#backupDownload').addEventListener('click', async () => {
-    const data = {app:'shrimp-pos', version:1, exportedAt:new Date().toISOString(), products, sales, purchases, expenses};
+    const data = {app:'shrimp-pos', version:1, exportedAt:new Date().toISOString(), products, sales, purchases, expenses, returns};
     const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2291,6 +2497,7 @@ function bindBackupHandlers(el){
         if(!d || !Array.isArray(d.products) || !Array.isArray(d.sales)) throw new Error('bad');
         d.purchases = Array.isArray(d.purchases) ? d.purchases : [];
         d.expenses = Array.isArray(d.expenses) ? d.expenses : [];
+        d.returns = Array.isArray(d.returns) ? d.returns : [];
         pendingRestore = d;
         renderHistory();
       }catch(e){
@@ -2316,9 +2523,9 @@ function bindBackupHandlers(el){
       return;
     }
     clearTimeout(eraseTimer); eraseTimer = null;
-    products = []; sales = []; purchases = []; expenses = []; cart = {};
+    products = []; sales = []; purchases = []; expenses = []; returns = []; cart = {};
     pendingRestore = null; lastBackup = null;
-    await saveProducts(); await saveSales(); await savePurchases(); await saveExpenses();
+    await saveProducts(); await saveSales(); await savePurchases(); await saveExpenses(); await saveReturns();
     try{ await window.storage.set('last-backup', '', false); }catch(e){}
     try{ await window.storage.set('tour-done', '', false); }catch(e){}
     hideUndoToast(); resetClearButtons();
@@ -2333,6 +2540,7 @@ function bindBackupHandlers(el){
     sales = pendingRestore.sales;
     purchases = pendingRestore.purchases;
     expenses = pendingRestore.expenses || [];
+    returns = pendingRestore.returns || [];
     products.forEach(p => {
       if(typeof p.costPrice !== 'number') p.costPrice = 0;
       if(typeof p.stock !== 'number') p.stock = 0;
@@ -2340,7 +2548,7 @@ function bindBackupHandlers(el){
     });
     pendingRestore = null;
     cart = {};
-    await saveProducts(); await saveSales(); await savePurchases(); await saveExpenses();
+    await saveProducts(); await saveSales(); await savePurchases(); await saveExpenses(); await saveReturns();
     renderSell(); updateTodayHeader(); renderHistory();
     const m = document.getElementById('backupMsg');
     if(m) m.textContent = t('bk_restored');
@@ -2747,6 +2955,11 @@ async function init(){
   document.getElementById('priceThisSale').addEventListener('click', () => applyPrice(false));
   document.getElementById('priceSaveNew').addEventListener('click', () => applyPrice(true));
 
+  document.getElementById('closeReturn').addEventListener('click', closeReturnModal);
+  document.getElementById('returnModal').addEventListener('click', (e) => { if(e.target.id === 'returnModal') closeReturnModal(); });
+  document.getElementById('returnQty').addEventListener('input', updateReturnPreview);
+  document.getElementById('returnRefund').addEventListener('input', updateReturnPreview);
+  document.getElementById('returnSaveBtn').addEventListener('click', submitReturn);
   document.getElementById('closeRestock').addEventListener('click', closeRestockModal);
   document.getElementById('restockModal').addEventListener('click', (e) => {
     if(e.target.id === 'restockModal') closeRestockModal();

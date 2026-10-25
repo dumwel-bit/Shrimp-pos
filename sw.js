@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shrimp-pos-v13';
+const CACHE_NAME = 'shrimp-pos-v14';
 const ASSETS = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
