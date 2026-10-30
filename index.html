@@ -193,6 +193,11 @@
   .note-edit input{flex:1;min-width:0;padding:8px;border-radius:8px;border:1px solid var(--line);font-size:13px;}
   .note-edit button{padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;font-weight:700;font-size:12px;cursor:pointer;}
   .note-edit .noteSave{background:var(--coral);color:#fff;border-color:var(--coral);}
+  .pdot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:baseline;flex:none;}
+  .pcol{border-left:7px solid var(--pc,#B0A78F) !important;}
+  .swatches{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px;}
+  .swatch{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0;}
+  .swatch.on{box-shadow:0 0 0 3px var(--ink);}
   .line-note{font-size:11px;font-weight:600;color:var(--ink-soft);background:#EFE7D2;border-radius:8px;padding:2px 7px;margin-left:4px;}
   .cart-row .cline{font-size:12px;color:var(--ink-soft);margin-top:2px;font-variant-numeric:tabular-nums;}
   .cart-row .cline .strike{text-decoration:line-through;color:#B0A78F;}
@@ -915,6 +920,7 @@ const ROWS = [
 ['ds_restock',"Capital spent (restocks)","Puhunang nagastos (restock)","Puhunan nga nagasto (restock)"],
 ['ds_refund',"Refunds received","Natanggap na refund","Nabaton nga refund"],
 ['ds_stockval',"Stock value at end of day","Halaga ng stock sa katapusan ng araw","Bili sang stock sa katapusan sang adlaw"],
+['f_color',"Color tag (to tell products apart)","Kulay (para madaling makilala)","Kolor (agud mahangpan dayon)"],
 ['bk_title',"Backup and restore","Backup at pagbabalik","Backup kag pagbalik"],
 ['bk_none',"You have not saved a backup yet.","Wala ka pang na-save na backup.","Wala ka pa sing natipig nga backup."],
 ['bk_last',"Last backup: {date} at {time}","Huling backup: {date} nang {time}","Katapusan nga backup: {date} sang {time}"],
@@ -1122,6 +1128,7 @@ async function loadData(){
     if(typeof p.stock !== 'number') p.stock = 0;
     if(typeof p.lowStock !== 'number') p.lowStock = 1;
   });
+  if(ensureColors()){ try{ await window.storage.set('products', JSON.stringify(products), false); }catch(e){} }
   try{
     const s = await window.storage.get('sales-log', false);
     sales = s ? JSON.parse(s.value) : [];
@@ -1175,6 +1182,31 @@ async function savePurchases(){
 
 function uid(){ return 'id' + Date.now() + Math.floor(Math.random()*1000); }
 
+const PALETTE = ['#E05A47','#F2A33A','#D9B91F','#6DAF4F','#2FA39A','#3C8DD9','#6C63D9','#B25FD1','#E65FA0','#8B6B4A'];
+function pcol(id){ const p = products.find(x => x.id === id); return (p && p.color) || '#B0A78F'; }
+function pdot(id){ return `<i class="pdot" style="background:${pcol(id)}"></i>`; }
+function nextColor(){
+  const used = products.map(p => p.color);
+  return PALETTE.find(c => !used.includes(c)) || PALETTE[products.length % PALETTE.length];
+}
+function ensureColors(){
+  let changed = false;
+  products.forEach(p => { if(!p.color){ p.color = nextColor(); changed = true; } });
+  return changed;
+}
+// quantity as kg / g (for per-kg products) or a plain number with the unit word
+function fqu(qty, unit, compact){
+  if(unit === 'per kg'){
+    const g = Math.round(qty * 1000);
+    if(g <= 0) return compact ? '0kg' : '0 kg';
+    const kg = Math.floor(g / 1000), rem = g % 1000, sp = compact ? '' : ' ';
+    if(kg === 0) return rem + sp + 'g';
+    if(rem === 0) return kg + sp + 'kg';
+    return kg + sp + 'kg' + (compact ? ' ' : ' ') + rem + sp + 'g';
+  }
+  if(!unit || compact) return fmtQty(qty);
+  return fmtQty(qty) + ' ' + unitWord(unit);
+}
 function fmtQty(qty){
   if(Number.isInteger(qty)) return String(qty);
   return (Math.round(qty * 1000) / 1000).toString();
@@ -1210,13 +1242,13 @@ function renderSell(){
       const qty = cartQtyFor(p.id);
       const low = p.stock <= p.lowStock;
       const out = p.stock <= 0;
-      return `<div class="product-card" data-id="${p.id}">
-        ${qty > 0 ? `<div class="qty-badge">${fmtQty(qty)}</div>` : ''}
+      return `<div class="product-card pcol" style="--pc:${pcol(p.id)};background:${pcol(p.id)}14;" data-id="${p.id}">
+        ${qty > 0 ? `<div class="qty-badge">${fqu(qty, p.unit, true)}</div>` : ''}
         <div class="pname">${escapeHtml(p.name)}</div>
         <div>
           <div class="pmeta">${escapeHtml(unitLabel(p.unit))}</div>
           <div class="pprice">${curPrice(p) !== p.price ? `<span class="was">${PESO(p.price)}</span>` : ''}${PESO(curPrice(p))}</div>
-          <div class="stock-note ${out ? 'out' : (low ? 'low' : '')}">${out ? t('out_of_stock') : t('left_n', {n: fmtQty(p.stock)})}</div>
+          <div class="stock-note ${out ? 'out' : (low ? 'low' : '')}">${out ? t('out_of_stock') : t('left_n', {n: fqu(p.stock, p.unit)})}</div>
           <div class="chip-row">
             <button class="amt-chip" data-act="amount" data-id="${p.id}">${t('by_amount')}</button>
             ${/kg/i.test(p.unit) ? `<button class="amt-chip" data-act="weight" data-id="${p.id}">${t('by_weight')}</button>` : ''}
@@ -1335,7 +1367,7 @@ function updateCartBar(){
   const bar = document.getElementById('cartBar');
   if(count === 0){ bar.classList.add('hidden'); clearTimeout(clearPendingTimer); resetClearButtons(); return; }
   bar.classList.remove('hidden');
-  document.getElementById('cartCount').textContent = t(count === 1 ? 'items_one' : 'items_many', {n: fmtQty(count)});
+  document.getElementById('cartCount').textContent = t(count === 1 ? 'items_one' : 'items_many', {n: Object.values(cart).filter(c => c.qty > 0).length});
   document.getElementById('cartAmt').textContent = PESO(total);
 }
 
@@ -1376,17 +1408,17 @@ function renderCartModal(){
             </div>
           </div>`
         : `<div class="cline">
-            ${discounted ? `<span class="strike">${PESO(c.originalPrice)}</span> ` : ''}${PESO(c.price)} ${escapeHtml(unitLabel(c.unit))} &times; ${fmtQty(c.qty)} = ${PESO(c.price * c.qty)}
+            ${discounted ? `<span class="strike">${PESO(c.originalPrice)}</span> ` : ''}${PESO(c.price)} ${escapeHtml(unitLabel(c.unit))} &times; ${fqu(c.qty, c.unit)} = ${PESO(c.price * c.qty)}
             <button class="editPrice">${t('edit_price')}</button>
           </div>`;
-      return `<div class="cart-row" data-id="${id}">
+      return `<div class="cart-row pcol" style="--pc:${pcol(c.pid)};" data-id="${id}">
         <div class="info">
-          <div class="cname">${escapeHtml(c.name)} ${c.note ? '<span class="line-note">' + escapeHtml(c.note) + '</span>' : ''} ${discounted ? '<span class="discount-badge">' + t('discounted') + '</span>' : ''}</div>
+          <div class="cname">${pdot(c.pid)}${escapeHtml(c.name)} ${c.note ? '<span class="line-note">' + escapeHtml(c.note) + '</span>' : ''} ${discounted ? '<span class="discount-badge">' + t('discounted') + '</span>' : ''}</div>
           ${priceArea}
         </div>
         ${isEditing ? '' : `<div class="stepper">
           <button class="dec">-</button>
-          <span class="qv">${fmtQty(c.qty)}</span>
+          <span class="qv">${fqu(c.qty, c.unit, true)}</span>
           <button class="inc">+</button>
         </div>
         <button class="remove-x">${t('remove')}</button>`}
@@ -1532,7 +1564,7 @@ function updateAmountPreview(){
     return;
   }
   const qty = val / curPrice(p);
-  preview.innerHTML = t('amt_preview', {amt: PESO(val), name: escapeHtml(p.name), qtyunit: '<span class="qv2">' + fmtQty(qty) + ' ' + escapeHtml(unitWord(p.unit)) + '</span>', price: PESO(curPrice(p)), perunit: escapeHtml(unitLabel(p.unit))});
+  preview.innerHTML = t('amt_preview', {amt: PESO(val), name: escapeHtml(p.name), qtyunit: '<span class="qv2">' + escapeHtml(fqu(qty, p.unit)) + '</span>', price: PESO(curPrice(p)), perunit: escapeHtml(unitLabel(p.unit))});
 }
 
 function addByAmount(){
@@ -1627,7 +1659,7 @@ function addByWeight(){
   newLine(p, key, {qty});
   closeWeightModal();
   renderSell();
-  showUndoToast(t('added_weight', {qty: fmtQty(qty), name: p.name}), () => {
+  showUndoToast(t('added_weight', {qty: fqu(qty, 'per kg'), name: p.name}), () => {
     delete cart[key];
     renderSell();
   });
@@ -1697,10 +1729,10 @@ function renderProducts(){
     html += '<div class="empty-note">' + t('no_products_short') + '</div>';
   }else{
     html += products.map(p => `
-      <div class="prod-manage-row" data-id="${p.id}">
+      <div class="prod-manage-row pcol" style="--pc:${pcol(p.id)};" data-id="${p.id}">
         <div class="info">
-          <div class="pname2">${escapeHtml(p.name)}</div>
-          <div class="pmeta2">${escapeHtml(t('prod_meta', {sell: PESO(p.price), cost: PESO(p.costPrice), unit: unitLabel(p.unit), stock: fmtQty(p.stock)}))}</div>
+          <div class="pname2">${pdot(p.id)}${escapeHtml(p.name)}</div>
+          <div class="pmeta2">${escapeHtml(t('prod_meta', {sell: PESO(p.price), cost: PESO(p.costPrice), unit: unitLabel(p.unit), stock: fqu(p.stock, p.unit)}))}</div>
         </div>
         <button class="icon-btn edit">${t('edit')}</button>
         <button class="icon-btn del">${t('delete')}</button>
@@ -1758,12 +1790,17 @@ function showProductForm(){
       <input type="number" id="fStock" inputmode="decimal" placeholder="0" value="${editing ? editing.stock : ''}">
       <label>${t('f_low')}</label>
       <input type="number" id="fLowStock" inputmode="decimal" placeholder="2" value="${editing ? editing.lowStock : '2'}">
+      <label>${t('f_color')}</label>
+      <div class="swatches" id="fSwatches">${PALETTE.map(c => `<button type="button" class="swatch ${c === (editing ? editing.color : nextColor()) ? 'on' : ''}" data-c="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div>
       <div id="formError" style="color:var(--red);font-size:12px;margin-top:8px;"></div>
       <div class="form-btn-row">
         <button class="cancel" id="cancelForm">${t('cancel')}</button>
         <button class="save" id="saveForm">${editing ? t('save_changes') : t('add_product_btn')}</button>
       </div>
     </div>`;
+  document.querySelectorAll('#fSwatches .swatch').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('#fSwatches .swatch').forEach(x => x.classList.toggle('on', x === b));
+  }));
   document.getElementById('cancelForm').addEventListener('click', () => { editingProductId = null; slot.innerHTML = ''; });
   document.getElementById('saveForm').addEventListener('click', async () => {
     const name = document.getElementById('fName').value.trim();
@@ -1778,18 +1815,20 @@ function showProductForm(){
     const finalCost = isNaN(cost) || cost < 0 ? 0 : cost;
     const finalStock = isNaN(stock) || stock < 0 ? 0 : stock;
     const finalLowStock = isNaN(lowStock) || lowStock < 0 ? 2 : lowStock;
+    const swOn = document.querySelector('#fSwatches .swatch.on');
+    const color = swOn ? swOn.dataset.c : nextColor();
     let undoFn;
     if(editing){
       const before = {...editing};
       editing.name = name; editing.price = price; editing.unit = unit;
-      editing.costPrice = finalCost; editing.stock = finalStock; editing.lowStock = finalLowStock;
+      editing.costPrice = finalCost; editing.stock = finalStock; editing.lowStock = finalLowStock; editing.color = color;
       undoFn = async () => {
         const cur = products.find(x => x.id === before.id);
         if(cur) Object.assign(cur, before);
         await saveProducts(); renderProducts(); renderSell(); updateCartBar();
       };
     }else{
-      const np = {id: uid(), name, price, unit, costPrice: finalCost, stock: finalStock, lowStock: finalLowStock};
+      const np = {id: uid(), name, price, unit, costPrice: finalCost, stock: finalStock, lowStock: finalLowStock, color};
       products.push(np);
       let startPu = null;
       if(finalStock > 0){
@@ -1872,10 +1911,10 @@ function renderInventory(){
     html += products.map(p => {
       const low = p.stock <= p.lowStock && p.stock > 0;
       const out = p.stock <= 0;
-      return `<div class="stock-row ${low || out ? 'low-flag' : ''}" data-id="${p.id}">
+      return `<div class="stock-row pcol ${low || out ? 'low-flag' : ''}" style="--pc:${pcol(p.id)};" data-id="${p.id}">
         <div class="info">
-          <div class="sname">${escapeHtml(p.name)} ${out ? '<span class="out-badge">' + t('out_of_stock') + '</span>' : (low ? '<span class="low-badge">' + t('low_stock') + '</span>' : '')}</div>
-          <div class="smeta">${escapeHtml(t('on_hand', {qty: fmtQty(p.stock), unit: unitWord(p.unit), worth: PESO(p.stock * p.costPrice), cost: PESO(p.costPrice), perunit: unitLabel(p.unit)}))}</div>
+          <div class="sname">${pdot(p.id)}${escapeHtml(p.name)} ${out ? '<span class="out-badge">' + t('out_of_stock') + '</span>' : (low ? '<span class="low-badge">' + t('low_stock') + '</span>' : '')}</div>
+          <div class="smeta">${escapeHtml(t('on_hand', {qty: fqu(p.stock, p.unit), unit: '', worth: PESO(p.stock * p.costPrice), cost: PESO(p.costPrice), perunit: unitLabel(p.unit)}))}</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;">
           <button class="restock-btn" data-id="${p.id}">${t('restock')}</button>
@@ -1890,9 +1929,9 @@ function renderInventory(){
       const pr = products.find(x => x.id === pu.productId);
       const d = new Date(pu.timestamp);
       const when = d.toLocaleDateString(locale(), {month:'short', day:'numeric'}) + ' · ' + d.toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
-      const line = t('restock_line', {qty: fmtQty(pu.qty), unit: pr ? unitWord(pr.unit) : '', cost: PESO(pu.costPerUnit), total: PESO(pu.totalCost)});
-      return `<div class="stock-row" data-pid="${pu.id}">
-        <div class="info"><div class="sname">${escapeHtml(pu.productName)}${pu.initial ? ' <span class="line-note">' + t('starting_stock') + '</span>' : ''}</div><div class="smeta">${escapeHtml(when)}<br>${escapeHtml(line)}</div></div>
+      const line = t('restock_line', {qty: fqu(pu.qty, pr && pr.unit), unit: '', cost: PESO(pu.costPerUnit), total: PESO(pu.totalCost)});
+      return `<div class="stock-row pcol" style="--pc:${pcol(pu.productId)};" data-pid="${pu.id}">
+        <div class="info"><div class="sname">${pdot(pu.productId)}${escapeHtml(pu.productName)}${pu.initial ? ' <span class="line-note">' + t('starting_stock') + '</span>' : ''}</div><div class="smeta">${escapeHtml(when)}<br>${escapeHtml(line)}</div></div>
         <div style="display:flex;flex-direction:column;gap:6px;">
           <button class="restock-btn pu-edit" data-pid="${pu.id}">${t('edit')}</button>
           <button class="restock-btn pu-del" data-pid="${pu.id}" style="background:#fff;color:var(--red);border:1px solid var(--red);">${t('remove')}</button>
@@ -1904,8 +1943,8 @@ function renderInventory(){
       const pr = products.find(x => x.id === r.productId);
       const d = new Date(r.timestamp);
       const when = d.toLocaleDateString(locale(), {month:'short', day:'numeric'}) + ' · ' + d.toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
-      const line = t('ret_line', {qty: fmtQty(r.qty), unit: pr ? unitWord(pr.unit) : '', refund: PESO(r.totalRefund), loss: PESO(retLoss(r))});
-      return `<div class="stock-row"><div class="info"><div class="sname">${escapeHtml(r.productName)}</div><div class="smeta">${escapeHtml(when)}<br>${escapeHtml(line)}${r.note ? '<br>📝 ' + escapeHtml(r.note) : ''}</div></div>
+      const line = t('ret_line', {qty: fqu(r.qty, pr && pr.unit), unit: '', refund: PESO(r.totalRefund), loss: PESO(retLoss(r))});
+      return `<div class="stock-row pcol" style="--pc:${pcol(r.productId)};"><div class="info"><div class="sname">${pdot(r.productId)}${escapeHtml(r.productName)}</div><div class="smeta">${escapeHtml(when)}<br>${escapeHtml(line)}${r.note ? '<br>📝 ' + escapeHtml(r.note) : ''}</div></div>
         <button class="restock-btn ret-del" data-rid="${r.id}" style="background:#fff;color:var(--red);border:1px solid var(--red);">${t('remove')}</button></div>`;
     }).join('');
   }
@@ -1962,7 +2001,7 @@ function updateRestockPreview(){
   }
   const oldPu = restockEditId ? purchases.find(x => x.id === restockEditId) : null;
   const newStock = p.stock + qty - (oldPu ? oldPu.qty : 0);
-  preview.innerHTML = t('restock_preview', {total: '<span class="qv2">' + PESO(qty * cost) + '</span>', stock: '<span class="qv2">' + fmtQty(newStock) + '</span>', unit: escapeHtml(unitWord(p.unit))});
+  preview.innerHTML = t('restock_preview', {total: '<span class="qv2">' + PESO(qty * cost) + '</span>', stock: '<span class="qv2">' + escapeHtml(fqu(newStock, p.unit)) + '</span>', unit: ''});
 }
 
 async function submitRestock(){
@@ -2011,7 +2050,7 @@ async function submitRestock(){
   closeRestockModal();
   renderInventory();
   renderSell();
-  showUndoToast(t('u_restock', {qty: fmtQty(qty), unit: unitWord(p.unit), name: p.name}), async () => {
+  showUndoToast(t('u_restock', {qty: fqu(qty, p.unit), unit: '', name: p.name}), async () => {
     purchases = purchases.filter(x => x.id !== newPu.id);
     const cprod = products.find(x => x.id === p.id);
     if(cprod){ cprod.stock = Math.max(0, r3(cprod.stock - qty)); cprod.costPrice = prevCost; }
@@ -2276,13 +2315,13 @@ function historyDaysHtml(){
       h += dd.sales.map(s => {
         const d = new Date(s.timestamp);
         const timeStr = d.toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
-        const itemsStr = s.items.map(i => {
+        const itemsHtml = s.items.map(i => {
           const wasDiscounted = i.originalPrice && Math.abs(i.originalPrice - i.price) > 0.001;
-          return `${i.name} x${fmtQty(i.qty)}` + (wasDiscounted ? ' (' + t('disc_to', {price: PESO(i.price)}) + ')' : '');
-        }).join(', ');
+          return `<div>${pdot(i.productId)}${escapeHtml(i.name)} &times; ${escapeHtml(fqu(i.qty, i.unit))}` + (wasDiscounted ? escapeHtml(' (' + t('disc_to', {price: PESO(i.price)}) + ')') : '') + `</div>`;
+        }).join('');
         return `<div class="sale-card">
           <div class="sale-top"><span class="sale-time">${timeStr}</span><span class="sale-total">${PESO(s.total)}</span></div>
-          <div class="sale-items">${escapeHtml(itemsStr)}</div>
+          <div class="sale-items">${itemsHtml}</div>
           ${editingNoteId === s.id
             ? `<div class="note-edit"><input type="text" maxlength="120" class="noteInput" value="${escapeHtml(s.note || '')}" placeholder="${escapeHtml(t('note_ph'))}"><button class="noteSave" data-sid="${s.id}">${t('save_price')}</button><button class="noteCancel">${t('cancel')}</button></div>`
             : `<div class="sale-note">${s.note ? '📝 ' + escapeHtml(s.note) + ' ' : ''}<button class="noteEdit" data-sid="${s.id}">${s.note ? t('edit') : t('add_note')}</button></div>`}
@@ -2293,16 +2332,16 @@ function historyDaysHtml(){
         h += `<div class="ds-title" style="margin:10px 2px 6px;">${t('hd_restocks')}</div>` + dd.pur.slice().sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).map(pu => {
           const pr = products.find(x => x.id === pu.productId);
           const tm = new Date(pu.timestamp).toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
-          const line = t('restock_line', {qty: fmtQty(pu.qty), unit: pr ? unitWord(pr.unit) : '', cost: PESO(pu.costPerUnit), total: PESO(pu.totalCost)});
-          return `<div class="sale-card" style="border-left:4px solid var(--green);"><div class="sale-top"><span class="sale-time">${escapeHtml(tm)} · ${escapeHtml(pu.productName)}${pu.initial ? ' <span class="line-note">' + t('starting_stock') + '</span>' : ''}</span><span class="sale-total" style="color:var(--red);">-${PESO(pu.totalCost)}</span></div><div class="sale-items">${escapeHtml(line)}</div></div>`;
+          const line = t('restock_line', {qty: fqu(pu.qty, pr && pr.unit), unit: '', cost: PESO(pu.costPerUnit), total: PESO(pu.totalCost)});
+          return `<div class="sale-card" style="border-left:4px solid var(--green);"><div class="sale-top"><span class="sale-time">${escapeHtml(tm)} · ${pdot(pu.productId)}${escapeHtml(pu.productName)}${pu.initial ? ' <span class="line-note">' + t('starting_stock') + '</span>' : ''}</span><span class="sale-total" style="color:var(--red);">-${PESO(pu.totalCost)}</span></div><div class="sale-items">${escapeHtml(line)}</div></div>`;
         }).join('');
       }
       if(dd.ret.length){
         h += `<div class="ds-title" style="margin:10px 2px 6px;">${t('hd_returns')}</div>` + dd.ret.map(r => {
           const pr = products.find(x => x.id === r.productId);
           const tm = new Date(r.timestamp).toLocaleTimeString(locale(), {hour:'numeric', minute:'2-digit'});
-          const line = t('ret_line', {qty: fmtQty(r.qty), unit: pr ? unitWord(pr.unit) : '', refund: PESO(r.totalRefund), loss: PESO(retLoss(r))});
-          return `<div class="sale-card" style="border-left:4px solid var(--coral);"><div class="sale-top"><span class="sale-time">${escapeHtml(tm)} · ${escapeHtml(r.productName)}</span><span class="sale-total">+${PESO(r.totalRefund)}</span></div><div class="sale-items">${escapeHtml(line)}${r.note ? ' · 📝 ' + escapeHtml(r.note) : ''}</div></div>`;
+          const line = t('ret_line', {qty: fqu(r.qty, pr && pr.unit), unit: '', refund: PESO(r.totalRefund), loss: PESO(retLoss(r))});
+          return `<div class="sale-card" style="border-left:4px solid var(--coral);"><div class="sale-top"><span class="sale-time">${escapeHtml(tm)} · ${pdot(r.productId)}${escapeHtml(r.productName)}</span><span class="sale-total">+${PESO(r.totalRefund)}</span></div><div class="sale-items">${escapeHtml(line)}${r.note ? ' · 📝 ' + escapeHtml(r.note) : ''}</div></div>`;
         }).join('');
       }
       const ids = [...new Set([...Object.keys(dd.sold), ...Object.keys(dd.added), ...Object.keys(dd.returned)])];
@@ -2311,11 +2350,12 @@ function historyDaysHtml(){
         ids.map(id => {
           const pr = products.find(x => x.id === id);
           const nm = pr ? pr.name : ((dd.sold[id] || dd.added[id] || dd.returned[id]).name);
-          const retq = dd.returned[id] ? '-' + fmtQty(dd.returned[id].qty) : '–';
-          const sold = dd.sold[id] ? fmtQty(dd.sold[id].qty) : '–';
-          const add = dd.added[id] ? '+' + fmtQty(dd.added[id].qty) : '–';
-          const lf = (id in leftByDay[k]) ? fmtQty(Math.max(0, leftByDay[k][id])) : '–';
-          return `<div class="ds-row"><span>${escapeHtml(nm)}</span><span>${sold}</span><span>${add}</span><span>${retq}</span><span><b>${lf}</b></span></div>`;
+          const un = pr ? pr.unit : (dd.sold[id] && dd.sold[id].unit) || '';
+          const retq = dd.returned[id] ? '-' + fqu(dd.returned[id].qty, un, true) : '–';
+          const sold = dd.sold[id] ? fqu(dd.sold[id].qty, un, true) : '–';
+          const add = dd.added[id] ? '+' + fqu(dd.added[id].qty, un, true) : '–';
+          const lf = (id in leftByDay[k]) ? fqu(Math.max(0, leftByDay[k][id]), un, true) : '–';
+          return `<div class="ds-row"><span>${pdot(id)}${escapeHtml(nm)}</span><span>${sold}</span><span>${add}</span><span>${retq}</span><span><b>${lf}</b></span></div>`;
         }).join('') + `</div>`;
     }
     return h + `</div>`;
@@ -2347,7 +2387,7 @@ function updateReturnPreview(){
   const rf = parseFloat(document.getElementById('returnRefund').value);
   if(!p || isNaN(q) || q <= 0 || isNaN(rf) || rf < 0){ pv.innerHTML = t('ret_hint'); return; }
   const refund = q * rf, loss = Math.max(0, q * (p.costPrice || 0) - refund);
-  pv.innerHTML = t('ret_preview', {qty: '<span class="qv2">' + fmtQty(q) + '</span>', unit: escapeHtml(unitWord(p.unit)), refund: '<span class="qv2">' + PESO(refund) + '</span>', loss: '<span class="qv2">' + PESO(loss) + '</span>', stock: '<span class="qv2">' + fmtQty(Math.max(0, p.stock - q)) + '</span>'});
+  pv.innerHTML = t('ret_preview', {qty: '<span class="qv2">' + escapeHtml(fqu(q, p.unit)) + '</span>', unit: '', refund: '<span class="qv2">' + PESO(refund) + '</span>', loss: '<span class="qv2">' + PESO(loss) + '</span>', stock: '<span class="qv2">' + escapeHtml(fqu(Math.max(0, p.stock - q), p.unit)) + '</span>'});
 }
 async function submitReturn(){
   const p = products.find(x => x.id === returnProductId);
@@ -2362,7 +2402,7 @@ async function submitReturn(){
   p.stock = Math.max(0, Math.round((p.stock - q) * 1000) / 1000);
   await saveProducts(); await saveReturns();
   closeReturnModal(); renderInventory(); renderSell();
-  showUndoToast(t('u_returned', {qty: fmtQty(q), unit: unitWord(p.unit), name: p.name}), async () => {
+  showUndoToast(t('u_returned', {qty: fqu(q, p.unit), unit: '', name: p.name}), async () => {
     await undoReturn(r.id);
   }, 8000);
 }
@@ -2460,7 +2500,7 @@ function backupCardHtml(){
     <input type="file" id="backupFile" accept=".json,application/json" style="display:none;">
     <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px;">
       <div style="font-weight:700;font-size:14px;color:var(--red);">${t('er_title')}</div>
-      <div class="t-sub">${t('er_desc')}</div>
+      <div class="t-sub" style="margin:4px 0 10px;">${t('er_desc')}</div>
       <button id="eraseBtn" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--red);background:#fff;color:var(--red);font-weight:700;font-size:14px;cursor:pointer;">${t('er_btn')}</button>
     </div>
     <div id="backupMsg" style="font-size:12px;margin-top:8px;color:var(--ink-soft);"></div>
@@ -2548,6 +2588,7 @@ function bindBackupHandlers(el){
     });
     pendingRestore = null;
     cart = {};
+    ensureColors();
     await saveProducts(); await saveSales(); await savePurchases(); await saveExpenses(); await saveReturns();
     renderSell(); updateTodayHeader(); renderHistory();
     const m = document.getElementById('backupMsg');
@@ -2702,8 +2743,8 @@ function renderTrends(){
       html += `<div class="t-sub" style="margin:0 0 6px 0;">${t(rec.count === 1 ? 'day_total_one' : 'day_total_many', {amt: PESO(rec.total), n: rec.count})}</div>`;
       html += rec.list.slice().sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp)).map(s => {
         const t = new Date(s.timestamp).toLocaleTimeString(locale(),{hour:'numeric',minute:'2-digit'});
-        const items = s.items.map(i => `${i.name} x${fmtQty(i.qty)}`).join(', ');
-        return `<div class="day-sale"><span>${t}</span><span class="ds-items">${escapeHtml(items)}</span><span class="ds-amt">${PESO(s.total)}</span></div>`;
+        const items = s.items.map(i => `${pdot(i.productId)}${escapeHtml(i.name)} &times; ${escapeHtml(fqu(i.qty, i.unit))}`).join(' &nbsp; ');
+        return `<div class="day-sale"><span>${t}</span><span class="ds-items">${items}</span><span class="ds-amt">${PESO(s.total)}</span></div>`;
       }).join('');
     }
     html += `</div>`;
@@ -2751,9 +2792,9 @@ function renderTrends(){
 
   /* products */
   const agg = {};
-  products.forEach(p => { agg[p.name] = {name:p.name, unit:p.unit, qty:0, rev:0}; });
+  products.forEach(p => { agg[p.name] = {id:p.id, name:p.name, unit:p.unit, qty:0, rev:0}; });
   inRange.forEach(s => s.items.forEach(i => {
-    if(!agg[i.name]) agg[i.name] = {name:i.name, unit:i.unit, qty:0, rev:0};
+    if(!agg[i.name]) agg[i.name] = {id:i.productId, name:i.name, unit:i.unit, qty:0, rev:0};
     agg[i.name].qty += i.qty;
     agg[i.name].rev += i.price * i.qty;
   }));
@@ -2768,11 +2809,11 @@ function renderTrends(){
       const slow = idx >= list.length - 2 && list.length > 3 && idx > 0;
       html += `<div style="margin-bottom:10px;">
         <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">
-          <span>${escapeHtml(p.name)}${p.rev === 0 ? '<span class="slow-tag">' + t('tag_nosales') + '</span>' : (slow ? '<span class="slow-tag">' + t('tag_slow') + '</span>' : '')}</span>
+          <span>${p.id ? pdot(p.id) : ''}${escapeHtml(p.name)}${p.rev === 0 ? '<span class="slow-tag">' + t('tag_nosales') + '</span>' : (slow ? '<span class="slow-tag">' + t('tag_slow') + '</span>' : '')}</span>
           <span style="font-variant-numeric:tabular-nums;">${PESO(p.rev)}</span>
         </div>
         <div class="hb" style="background:var(--sand);border-radius:5px;height:10px;overflow:hidden;margin-top:4px;"><div style="height:100%;width:${w}%;background:${idx === 0 ? 'var(--teal)' : 'var(--coral)'};border-radius:5px;"></div></div>
-        <div style="font-size:11px;color:var(--ink-soft);margin-top:2px;">${escapeHtml(t('sold_n', {qty: fmtQty(p.qty), unit: unitWord(p.unit)}))}</div>
+        <div style="font-size:11px;color:var(--ink-soft);margin-top:2px;">${escapeHtml(t('sold_n', {qty: fqu(p.qty, p.unit), unit: ''}))}</div>
       </div>`;
     });
   }
